@@ -1,5 +1,25 @@
 local ParkourObjectsConfig = {}
 
+local function CreateRaycastBeam(parentPart)
+    local startAttachment = Instance.new("Attachment")
+    startAttachment.Parent = parentPart
+
+    local endAttachment = Instance.new("Attachment")
+    endAttachment.Parent = parentPart
+
+    local beam = Instance.new("Beam")
+    beam.Attachment0 = startAttachment
+    beam.Attachment1 = endAttachment
+    beam.Width0 = 0.08
+    beam.Width1 = 0.08
+    beam.Parent = parentPart
+
+    return endAttachment
+end
+
+local debugWaistBeam = nil
+local debugHeadBeam = nil
+
 function ParkourObjectsConfig.DetectVaultObj(character)
     local root = character:FindFirstChild("HumanoidRootPart")
     local head = character:FindFirstChild("Head")
@@ -18,13 +38,26 @@ function ParkourObjectsConfig.DetectVaultObj(character)
 
     local distance = 5
 
+    if not debugWaistBeam and not debugHeadBeam then
+        debugWaistBeam = CreateRaycastBeam(root)
+        debugHeadBeam = CreateRaycastBeam(head)
+    end
+
+    local currentMoveDirection = humanoid.MoveDirection * distance
+    local rootCoordinate = root.CFrame:VectorToObjectSpace(currentMoveDirection)
+    local headCoordinate = head.CFrame:VectorToObjectSpace(currentMoveDirection)
+
+    debugWaistBeam.Position = rootCoordinate
+    debugHeadBeam.Position = headCoordinate
+
+
     local waistDetection = workspace:Raycast(root.Position, humanoid.MoveDirection.Unit * distance, params)
     local headDetection = workspace:Raycast(head.Position, humanoid.MoveDirection.Unit * distance, params)
 
     if waistDetection and headDetection then
         if waistDetection.Instance ~= headDetection.Instance then return nil end
 
-        local aboveDetection = waistDetection.Position + humanoid.MoveDirection * 0.5 + Vector3.new(0, -CastHeight, 0)
+        local aboveDetection = waistDetection.Position + humanoid.MoveDirection * 0.5 + Vector3.new(0, CastHeight, 0)
         local downCastResult = workspace:Raycast(aboveDetection, humanoid.MoveDirection.Unit * 1, params)
 
         if not downCastResult or downCastResult.Instance ~= waistDetection.Instance then
