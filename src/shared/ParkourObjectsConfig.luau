@@ -43,16 +43,14 @@ function ParkourObjectsConfig.DetectVaultObj(character)
         debugHeadBeam = CreateRaycastBeam(head)
     end
 
-    local currentMoveDirection = humanoid.MoveDirection * distance
-    local rootCoordinate = root.CFrame:VectorToObjectSpace(currentMoveDirection)
-    local headCoordinate = head.CFrame:VectorToObjectSpace(currentMoveDirection)
+    local currentMoveDirection = root.CFrame.LookVector * distance
 
-    debugWaistBeam.Position = rootCoordinate
-    debugHeadBeam.Position = headCoordinate
+    debugWaistBeam.Position = currentMoveDirection
+    debugHeadBeam.Position = currentMoveDirection
 
 
-    local waistDetection = workspace:Raycast(root.Position, humanoid.MoveDirection.Unit * distance, params)
-    local headDetection = workspace:Raycast(head.Position, humanoid.MoveDirection.Unit * distance, params)
+    local waistDetection = workspace:Raycast(root.Position, root.CFrame.LookVector * distance, params)
+    local headDetection = workspace:Raycast(head.Position, root.CFrame.LookVector * distance, params)
 
     if waistDetection and headDetection then
         if waistDetection.Instance ~= headDetection.Instance then return nil end
