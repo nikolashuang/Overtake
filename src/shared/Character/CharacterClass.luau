@@ -57,17 +57,23 @@ end
 --VAULTING--
 
 function CharacterClass:CanVault()
-    local vaultData = ParkourPhysics.DetectVaultObj(self.Character)
+    local vaultObjData, detectedArea = ParkourPhysics.DetectObstacle(self.Character)
 
-    if not vaultData then return false end
+    if not vaultObjData then return false end
 
-    return true, vaultData
+    return true, vaultObjData, detectedArea
 end
 
 function CharacterClass:Vault()
-    local canVault, vaultData = self:CanVault()
+    local canVault, vaultData, detectedArea = self:CanVault()
 
     if not canVault then return end
+
+    if detectedArea == "Waist" then
+        
+    elseif detectedArea == "Head" or detectedArea == "Both" then
+        
+    end
 
 
 end

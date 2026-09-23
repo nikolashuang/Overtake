@@ -15,6 +15,6 @@ characterObject:BindCharacter(character)
 
 
 RunService.PreRender:Connect(function()
-    characterObject.VaultObject = ParkourPhysics.DetectVaultObj(characterObject.Character)
+    characterObject.VaultObject = ParkourPhysics.DetectObstacle(characterObject.Character)
 end)
 
