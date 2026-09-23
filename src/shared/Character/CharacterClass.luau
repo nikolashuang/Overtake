@@ -1,3 +1,7 @@
+local RepStorage = game:GetService("ReplicatedStorage")
+local ParkourPhysics = require(RepStorage.Shared.Parkour.ParkourPhysics)
+local ParkourConfig = require(RepStorage.Shared.Parkour.ParkourConfig)
+
 local CharacterClass = {}
 
 CharacterClass.__index = CharacterClass
@@ -19,6 +23,9 @@ function CharacterClass.new(player, profile)
     self.Staggered = false
     self.Fatigue = false
     self.Stationary = 0
+
+
+    self.VaultObject = nil
 
 
     return self
@@ -47,7 +54,25 @@ function CharacterClass:UpdateMomentum(deltaTime)
     return self.MomentumUnit
 end
 
+--VAULTING--
+
+function CharacterClass:CanVault()
+    local vaultData = ParkourPhysics.DetectVaultObj(self.Character)
+
+    if not vaultData then return false end
+
+    return true, vaultData
+end
+
 function CharacterClass:Vault()
+    local canVault, vaultData = self:CanVault()
+
+    if not canVault then return end
+
+
+end
+
+function CharacterClass:WallRun()
 
 end
 

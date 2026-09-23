@@ -3,7 +3,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 
 local PlayerProfile = require(ServerScriptService.PlayerProfile.ProfileService)
-local CharacterClass = require(ServerScriptService.Character.CharacterClass)
+local CharacterClass = require(ReplicatedStorage.Shared.Character.CharacterClass)
 
 local Characters = {}
 

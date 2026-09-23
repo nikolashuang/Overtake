@@ -4,12 +4,17 @@ local StarterPlr = game:GetService("StarterPlayer")
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 
-local ParkourConfig = require(RepStorage.Shared.ParkourObjectsConfig)
+local ParkourPhysics = require(RepStorage.Shared.Parkour.ParkourPhysics)
+local ClientCharacter = require(RepStorage.Shared.Character.CharacterClass)
 
 local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 
+local characterObject = ClientCharacter.new(player)
+characterObject:BindCharacter(character)
 
-RunService.PostSimulation:Connect(function()
-    ParkourConfig.DetectVaultObj(character)
+
+RunService.PreRender:Connect(function()
+    characterObject.VaultObject = ParkourPhysics.DetectVaultObj(characterObject.Character)
 end)
+
