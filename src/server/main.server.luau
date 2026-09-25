@@ -33,3 +33,16 @@ Players.PlayerRemoving:Connect(function(player)
     PlayerProfile:ReleaseProfile(player)
     Characters[player] = nil
 end)
+
+
+local pRemote = ReplicatedStorage.Remotes.ParkourRemote
+
+pRemote.OnServerEvent:Connect(function(player, traversalType)
+    local character = Characters[player]
+
+    if not character then return end
+
+    if traversalType == "Vaulting" then
+        character:VaultOrHurdle()
+    end
+end)

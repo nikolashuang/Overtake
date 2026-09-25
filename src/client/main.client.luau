@@ -4,7 +4,8 @@ local StarterPlr = game:GetService("StarterPlayer")
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 
-local ParkourPhysics = require(RepStorage.Shared.Parkour.ParkourPhysics)
+--local ParkourPhysics = require(RepStorage.Shared.Parkour.ParkourPhysics)
+local ParkourController = require(script.Parent.Controllers.ParkourController)
 local ClientCharacter = require(RepStorage.Shared.Character.CharacterClass)
 
 local player = Players.LocalPlayer
@@ -14,7 +15,12 @@ local characterObject = ClientCharacter.new(player)
 characterObject:BindCharacter(character)
 
 
+UserInput.InputBegan:Connect(function(input, processed)
+    ParkourController.AttemptVault(input, processed, characterObject)
+end)
+
+
 RunService.PreRender:Connect(function()
-    characterObject.VaultObject = ParkourPhysics.DetectObstacle(characterObject.Character)
+    characterObject:UpdateVaultObject()
 end)
 

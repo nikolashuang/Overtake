@@ -1,4 +1,6 @@
 local RepStorage = game:GetService("ReplicatedStorage")
+local Debris = game:GetService("Debris")
+
 local ParkourPhysics = require(RepStorage.Shared.Parkour.ParkourPhysics)
 local ParkourConfig = require(RepStorage.Shared.Parkour.ParkourConfig)
 
@@ -24,8 +26,9 @@ function CharacterClass.new(player, profile)
     self.Fatigue = false
     self.Stationary = 0
 
-
-    self.VaultObject = nil
+    self.ableVault = false
+    self.vaultObject = nil
+    self.traversalType = nil
 
 
     return self
@@ -35,6 +38,10 @@ function CharacterClass:BindCharacter(character)
     self.Character = character
     self.Humanoid = character:WaitForChild("Humanoid")
     self.RootPart = character:WaitForChild("HumanoidRootPart")
+
+    self.MovementAttachment = Instance.new("Attachment")
+    self.MovementAttachment.Name = "MovementAttachment"
+    self.MovementAttachment.Parent = self.RootPart
 
 end
 
@@ -56,25 +63,45 @@ end
 
 --VAULTING--
 
-function CharacterClass:CanVault()
-    local vaultObjData, detectedArea = ParkourPhysics.DetectObstacle(self.Character)
-
-    if not vaultObjData then return false end
-
-    return true, vaultObjData, detectedArea
+function CharacterClass:UpdateVaultObject()
+    local vaultObjData, traversalType = ParkourPhysics.DetectObstacle(self.Character)
+    
+    self.vaultObject = vaultObjData
+    self.traversalType = traversalType
+    self.ableVault = vaultObjData ~= nil
 end
 
-function CharacterClass:Vault()
-    local canVault, vaultData, detectedArea = self:CanVault()
+function CharacterClass:CanVault()
+    if not self.ableVault then return false end
+    if self.Staggered then return false end
+    
+    return true
+end
 
-    if not canVault then return end
+function CharacterClass:VaultOrHurdle()
+    if not self:CanVault() then return end
 
-    if detectedArea == "Waist" then
-        
-    elseif detectedArea == "Head" or detectedArea == "Both" then
-        
+    local root = self.RootPart
+    root.AssemblyAngularVelocity = Vector3.zero
+
+    local lv = Instance.new("LinearVelocity")
+    lv.Attachment0 = self.MovementAttachment
+    lv.RelativeTo = Enum.ActuatorRelativeTo.World
+    lv.ForceLimitsEnabled = false
+
+    if self.traversalType == "Vault" then
+        lv.VectorVelocity = root.CFrame.LookVector * 30 + Vector3.new(0, 10, 0)
+    elseif self.traversalType == "Hurdle" then
+        lv.VectorVelocity = root.CFrame.LookVector * 20 + Vector3.new(0, 5, 0)
     end
 
+    lv.Parent = root
+
+    Debris:AddItem(lv, 0.3)
+
+end
+
+function CharacterClass:LedgeBoost()
 
 end
 

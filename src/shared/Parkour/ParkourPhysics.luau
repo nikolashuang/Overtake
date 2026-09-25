@@ -23,22 +23,18 @@ local function CreateRaycastBeam(parentPart, startPosition)
     return endAttachment
 end
 
-
------------------------------------------
-
 local debugWaistBeam = nil
 local debugHeadBeam = nil
+local debugKneeBeam = nil
+-----------------------------------------
 
 function ParkourPhysics.DetectObstacle(character)
     local root = character:FindFirstChild("HumanoidRootPart")
     local humanoid = character:FindFirstChild("Humanoid")
 
-    if not root or humanoid then return nil end
+    if not root or not humanoid then return nil end
 
-    local MAX_VAULT_HEIGHT = ParkourConfig.Vault.MAX_VAULT_HEIGHT
     local VAULT_DISTANCE = ParkourConfig.Vault.VAULT_DISTANCE
-    local BUFFER_CHECK = ParkourConfig.Vault.BUFFER_CHECK
-    local CastHeight = MAX_VAULT_HEIGHT + BUFFER_CHECK
 
     if humanoid.MoveDirection.Magnitude == 0 then return end
 
@@ -47,38 +43,36 @@ function ParkourPhysics.DetectObstacle(character)
     params.FilterType = Enum.RaycastFilterType.Exclude
     params.FilterDescendantsInstances = {character}
 
-	local stableHeadOffset = Vector3.new(0, 2.29, 0)
-	local stableRootOffset = Vector3.new(0, -1, 0)
+	local stableHeadOffset = Vector3.new(0, 1.8, 0)
+	local stableRootOffset = Vector3.new(0, -0.6, 0)
+    local stableKneeOffset = Vector3.new(0, -2, 0)
     local stableHeadPosition = root.CFrame:PointToWorldSpace(stableHeadOffset)
 	local stableRootPosition = root.CFrame:PointToWorldSpace(stableRootOffset)
+    local stableKneePosition = root.CFrame:PointToWorldSpace(stableKneeOffset)
 
-    if not debugWaistBeam and not debugHeadBeam then
+    if not debugWaistBeam and not debugHeadBeam and not debugKneeBeam then
         debugWaistBeam = CreateRaycastBeam(root, stableRootOffset)
         debugHeadBeam = CreateRaycastBeam(root, stableHeadOffset)
+        debugKneeBeam = CreateRaycastBeam(root, stableKneeOffset)
     end
 
     local localMoveDirection = Vector3.new(0, 0, -VAULT_DISTANCE)
 
     debugWaistBeam.Position = localMoveDirection + stableRootOffset
     debugHeadBeam.Position = localMoveDirection + stableHeadOffset
+    debugKneeBeam.Position = localMoveDirection + stableKneeOffset
 
 
     local waistDetection = workspace:Raycast(stableRootPosition, root.CFrame.LookVector * VAULT_DISTANCE, params)
     local headDetection = workspace:Raycast(stableHeadPosition, root.CFrame.LookVector * VAULT_DISTANCE, params)
+    local kneeDetection = workspace:Raycast(stableKneePosition, root.CFrame.LookVector * VAULT_DISTANCE, params)
 
-    if waistDetection and headDetection then
-        if waistDetection.Instance ~= headDetection.Instance then return nil end
+    if headDetection then return nil end
 
-        local aboveDetection = waistDetection.Position + root.CFrame.LookVector * 0.5 + Vector3.new(0, CastHeight, 0)
-        local downCastResult = workspace:Raycast(aboveDetection, Vector3.new(0, -CastHeight, 0), params)
-
-        if not downCastResult or downCastResult.Instance ~= waistDetection.Instance then return nil end
-
-        return downCastResult.Instance, "Both"
-    elseif waistDetection and not headDetection then
-        return waistDetection.Instance, "Waist"
-    elseif not waistDetection and headDetection then
-        return headDetection.Instance, "Head"
+    if waistDetection then
+        return waistDetection.Instance, "Vault"
+    elseif not waistDetection and kneeDetection then
+        return kneeDetection.Instance, "Hurdle"
     end
 
     return nil
