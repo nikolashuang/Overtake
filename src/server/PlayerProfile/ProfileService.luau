@@ -18,6 +18,21 @@ local function deepCopy(original)
     return copy
 end
 
+local function UpdateProfileInformation(data, template)
+    print("Updating Data Blocks")
+    for i, v in pairs(template) do
+        if data[i] == nil then
+            if type(v) == "table" then
+                data[i] = deepCopy(v)
+            else
+                data[i] = v
+            end
+        elseif type(data[i]) == "table" and type(v) == "table" then
+            UpdateProfileInformation(data[i], v)
+        end
+    end
+end
+
 function ProfileService.LoadProfile(player)
     local key = "Profile_" .. player.UserId
 
@@ -32,6 +47,8 @@ function ProfileService.LoadProfile(player)
 
     if data == nil then
         data = deepCopy(ProfileTemplate)
+    else
+        UpdateProfileInformation(data, ProfileTemplate)
     end
 
     local profile = {
