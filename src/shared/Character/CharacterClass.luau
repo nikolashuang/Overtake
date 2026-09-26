@@ -4,6 +4,8 @@ local Debris = game:GetService("Debris")
 local ParkourPhysics = require(RepStorage.Shared.Parkour.ParkourPhysics)
 local ParkourConfig = require(RepStorage.Shared.Parkour.ParkourConfig)
 
+local VaultConfig = ParkourConfig.Vault
+
 local CharacterClass = {}
 
 CharacterClass.__index = CharacterClass
@@ -82,22 +84,42 @@ function CharacterClass:VaultOrHurdle()
     if not self:CanVault() then return end
 
     local root = self.RootPart
-    root.AssemblyAngularVelocity = Vector3.zero
+
+    local align = Instance.new("AlignOrientation")
+    align.Attachment0 = self.MovementAttachment
+    align.Mode = Enum.OrientationAlignmentMode.OneAttachment
+    align.RigidityEnabled = true
 
     local lv = Instance.new("LinearVelocity")
     lv.Attachment0 = self.MovementAttachment
     lv.RelativeTo = Enum.ActuatorRelativeTo.World
     lv.ForceLimitsEnabled = false
 
+    local currentVelocity = root.AssemblyLinearVelocity
+    local look = root.CFrame.LookVector
+    local flatLook = Vector3.new(look.X, 0, look.Z).Unit
+
+    local forwardSpeed = math.max(currentVelocity:Dot(flatLook), VaultConfig.MIN_VAULT_SPEED)
+
     if self.traversalType == "Vault" then
-        lv.VectorVelocity = root.CFrame.LookVector * 30 + Vector3.new(0, 10, 0)
+        print("Look Y:" .. look.Y)
+        lv.VectorVelocity = flatLook * (forwardSpeed + 5) + Vector3.new(0, 3, 0)
+        align.CFrame = CFrame.lookAt(Vector3.zero, flatLook)
     elseif self.traversalType == "Hurdle" then
-        lv.VectorVelocity = root.CFrame.LookVector * 20 + Vector3.new(0, 5, 0)
+        print("Look Y:" .. look.Y)
+        lv.VectorVelocity = flatLook * forwardSpeed + Vector3.new(0, 1.5, 0)
+        align.CFrame = CFrame.lookAt(Vector3.zero, flatLook)
     end
 
     lv.Parent = root
+    align.Parent = root
 
-    Debris:AddItem(lv, 0.3)
+    Debris:AddItem(lv, 0.15)
+    Debris:AddItem(align, 0.15)
+
+end
+
+function CharacterClass:Slide()
 
 end
 
