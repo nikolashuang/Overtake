@@ -84,6 +84,9 @@ function CharacterClass:VaultOrHurdle()
     if not self:CanVault() then return end
 
     local root = self.RootPart
+    local hum = self.Humanoid
+
+    hum.Jump = false
 
     local align = Instance.new("AlignOrientation")
     align.Attachment0 = self.MovementAttachment
@@ -98,24 +101,33 @@ function CharacterClass:VaultOrHurdle()
     local currentVelocity = root.AssemblyLinearVelocity
     local look = root.CFrame.LookVector
     local flatLook = Vector3.new(look.X, 0, look.Z).Unit
+    local obstalceHeight = self.vaultObject.Size.Y
 
     local forwardSpeed = math.max(currentVelocity:Dot(flatLook), VaultConfig.MIN_VAULT_SPEED)
 
     if self.traversalType == "Vault" then
-        print("Look Y:" .. look.Y)
-        lv.VectorVelocity = flatLook * (forwardSpeed + 5) + Vector3.new(0, 3, 0)
+        if obstalceHeight < VaultConfig.MAX_VAULT_HEIGHT then
+            lv.VectorVelocity = flatLook * (forwardSpeed + 15) + Vector3.new(0, 3, 0)
+        else
+            lv.VectorVelocity = flatLook * (forwardSpeed + 15) + Vector3.new(0, 9, 0)
+        end
         align.CFrame = CFrame.lookAt(Vector3.zero, flatLook)
+        hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
     elseif self.traversalType == "Hurdle" then
-        print("Look Y:" .. look.Y)
         lv.VectorVelocity = flatLook * forwardSpeed + Vector3.new(0, 1.5, 0)
         align.CFrame = CFrame.lookAt(Vector3.zero, flatLook)
+        hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
     end
 
     lv.Parent = root
     align.Parent = root
 
-    Debris:AddItem(lv, 0.15)
-    Debris:AddItem(align, 0.15)
+    Debris:AddItem(lv, 0.2)
+    Debris:AddItem(align, 0.2)
+
+    task.delay(VaultConfig.VAULT_DURATION, function()
+        hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
+    end)
 
 end
 
