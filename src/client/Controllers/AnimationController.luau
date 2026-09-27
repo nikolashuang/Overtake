@@ -62,6 +62,18 @@ function AnimationController.StopAnimation(storage, anim)
     animationTrack:Stop()
 end
 
+function AnimationController.AdjustAnimationSpeed(storage, anim, speed)
+    if not storage or not anim then return end
+    if type(speed) ~= "number" then return end
+
+    local storageTable = LoadedTracks[storage]
+    if not storageTable then return end
+
+    local animationTrack = storageTable[anim]
+    if not animationTrack then return end
+
+    animationTrack:AdjustSpeed(speed)
+end
 
 
 return AnimationController
