@@ -28,6 +28,19 @@ local debugHeadBeam = nil
 local debugKneeBeam = nil
 -----------------------------------------
 
+local function validateHit(result)
+    if not result then return nil end
+
+    local model = result.Instance:FindFirstAncestorOfClass("Model")
+
+    if model and model:FindFirstChildOfClas("Humanoid") then
+        return nil
+    end
+
+    return result
+end
+
+
 function ParkourPhysics.DetectObstacle(character)
     local root = character:FindFirstChild("HumanoidRootPart")
     local humanoid = character:FindFirstChild("Humanoid")
@@ -63,9 +76,9 @@ function ParkourPhysics.DetectObstacle(character)
     debugKneeBeam.Position = localMoveDirection + stableKneeOffset
 
 
-    local waistDetection = workspace:Raycast(stableRootPosition, root.CFrame.LookVector * VAULT_DISTANCE, params)
-    local headDetection = workspace:Raycast(stableHeadPosition, root.CFrame.LookVector * VAULT_DISTANCE, params)
-    local kneeDetection = workspace:Raycast(stableKneePosition, root.CFrame.LookVector * VAULT_DISTANCE, params)
+    local waistDetection = validateHit(workspace:Raycast(stableRootPosition, root.CFrame.LookVector * VAULT_DISTANCE, params))
+    local headDetection = validateHit(workspace:Raycast(stableHeadPosition, root.CFrame.LookVector * VAULT_DISTANCE, params))
+    local kneeDetection = validateHit(workspace:Raycast(stableKneePosition, root.CFrame.LookVector * VAULT_DISTANCE, params))
 
     if headDetection then return nil end
 

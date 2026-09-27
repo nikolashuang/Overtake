@@ -5,16 +5,18 @@ local ParkourPhysics = require(RepStorage.Shared.Parkour.ParkourPhysics)
 local ParkourConfig = require(RepStorage.Shared.Parkour.ParkourConfig)
 
 local VaultConfig = ParkourConfig.Vault
+local MomentumConfig = ParkourConfig.Momentum
 
 local CharacterClass = {}
 
 CharacterClass.__index = CharacterClass
 
-function CharacterClass.new(player, profile)
+function CharacterClass.new(player, system)
     local self = setmetatable({}, CharacterClass)
 
     self.Player = player
-    self.Profile = profile
+    self.Profile = system.Profile
+    self.AnimationController = system.AnimationController
 
     self.Character = nil
     self.Humanoid = nil
@@ -32,6 +34,8 @@ function CharacterClass.new(player, profile)
     self.vaultObject = nil
     self.traversalType = nil
 
+    self.currentMovementAnim = nil
+
 
     return self
 end
@@ -40,6 +44,7 @@ function CharacterClass:BindCharacter(character)
     self.Character = character
     self.Humanoid = character:WaitForChild("Humanoid")
     self.RootPart = character:WaitForChild("HumanoidRootPart")
+    self.Humanoid.WalkSpeed = MomentumConfig.MIN_MOVE_SPEED
 
     self.MovementAttachment = Instance.new("Attachment")
     self.MovementAttachment.Name = "MovementAttachment"
@@ -49,18 +54,23 @@ end
 
 function CharacterClass:UpdateMomentum(deltaTime)
     local isMoving = self.Humanoid.MoveDirection.Magnitude > 0
+    self.Humanoid.WalkSpeed = MomentumConfig.MIN_MOVE_SPEED
+
 
     if isMoving then
-        self.Stationary = 0
-        self.MomentumUnit += 3 * deltaTime
+        if self.MomentumUnit < MomentumConfig.MAX_MOMENTUM then
+            self.Stationary = 0
+            self.MomentumUnit += 5 * deltaTime
+        end
     else
         self.Stationary += 1 * deltaTime
-        if self.Stationary >= 3 then
-            self.MomentumUnit -= 2 * deltaTime
+        if self.Stationary >= 3 and self.MomentumUnit > MomentumConfig.MIN_MOMENTUM then
+            self.MomentumUnit -= 15 * deltaTime
         end
     end
 
-    return self.MomentumUnit
+    print(self.MomentumUnit)
+    self.Humanoid.WalkSpeed = math.max(MomentumConfig.MIN_MOVE_SPEED, self.Humanoid.WalkSpeed + (self.MomentumUnit * 0.3))
 end
 
 --VAULTING--
@@ -108,8 +118,10 @@ function CharacterClass:VaultOrHurdle()
     if self.traversalType == "Vault" then
         if obstalceHeight < VaultConfig.MAX_VAULT_HEIGHT then
             lv.VectorVelocity = flatLook * (forwardSpeed + 15) + Vector3.new(0, 3, 0)
+            self.AnimationController.PlayAnimation("ParkourAnims", "VaultVariant1")
         else
             lv.VectorVelocity = flatLook * (forwardSpeed + 15) + Vector3.new(0, 9, 0)
+            self.AnimationController.PlayAnimation("ParkourAnims", "VaultVariant1")
         end
         align.CFrame = CFrame.lookAt(Vector3.zero, flatLook)
         hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
