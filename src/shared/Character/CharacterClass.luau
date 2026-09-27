@@ -23,6 +23,7 @@ function CharacterClass.new(player, system)
     self.RootPart = nil
 
     self.MomentumUnit = 0
+    self.RisingMomentum = 5
 
     self.Attributes = {}
 
@@ -60,17 +61,21 @@ function CharacterClass:UpdateMomentum(deltaTime)
     if isMoving then
         if self.MomentumUnit < MomentumConfig.MAX_MOMENTUM then
             self.Stationary = 0
-            self.MomentumUnit += 5 * deltaTime
+            self.MomentumUnit += self.RisingMomentum * deltaTime
+            self.RisingMomentum = math.min(MomentumConfig.MAX_RISING_MOMENTUM, self.RisingMomentum + 0.2)
+        elseif self.MomentumUnit >= MomentumConfig.MAX_MOMENTUM then
+            self.MomentumUnit = MomentumConfig.MAX_MOMENTUM
         end
     else
         self.Stationary += 1 * deltaTime
         if self.Stationary >= 3 and self.MomentumUnit > MomentumConfig.MIN_MOMENTUM then
-            self.MomentumUnit -= 15 * deltaTime
+            self.MomentumUnit -= 50 * deltaTime
+            self.RisingMomentum = 5
         end
     end
 
     print(self.MomentumUnit)
-    self.Humanoid.WalkSpeed = math.max(MomentumConfig.MIN_MOVE_SPEED, self.Humanoid.WalkSpeed + (self.MomentumUnit * 0.3))
+    self.Humanoid.WalkSpeed += (self.MomentumUnit * 0.3)
 end
 
 --VAULTING--

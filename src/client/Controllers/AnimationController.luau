@@ -72,7 +72,9 @@ function AnimationController.AdjustAnimationSpeed(storage, anim, speed)
     local animationTrack = storageTable[anim]
     if not animationTrack then return end
 
-    animationTrack:AdjustSpeed(speed)
+    local trackSpeed = math.min(1, speed)
+
+    animationTrack:AdjustSpeed(trackSpeed)
 end
 
 

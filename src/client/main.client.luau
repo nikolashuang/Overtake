@@ -8,6 +8,9 @@ local Players = game:GetService("Players")
 local ParkourController = require(script.Parent.Controllers.ParkourController)
 local ClientCharacter = require(RepStorage.Shared.Character.CharacterClass)
 local AnimationController = require(StarterPlr.StarterPlayerScripts.Controllers.AnimationController)
+local ParkourConfig = require(RepStorage.Shared.Parkour.ParkourConfig)
+
+local MomentumConfig = ParkourConfig.Momentum
 
 local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
@@ -31,7 +34,9 @@ end)
 RunService.PreRender:Connect(function()
     characterObject:UpdateVaultObject()
 
-    if characterObject.Humanoid.MoveDirection.Magnitude <= 0 then
+    local characterState = characterObject.Humanoid:GetState()
+
+    if characterObject.Humanoid.MoveDirection.Magnitude <= 0 or characterState == Enum.HumanoidStateType.Jumping or characterState == Enum.HumanoidStateType.Freefall then
         AnimationController.StopAnimation("MovementAnims", "StartupAnim")
         AnimationController.StopAnimation("MovementAnims", "FullSprintAnim")
         AnimationController.StopAnimation("MovementAnims", "SprintAnim")
@@ -41,15 +46,27 @@ RunService.PreRender:Connect(function()
 
     local newAnim = nil
 
-    if characterObject.MomentumUnit < 5 then
+    if characterObject.MomentumUnit < MomentumConfig.STARTUP_MOMENTUM then
         newAnim = "StartupAnim"
-    elseif characterObject.MomentumUnit > 90 then
+    elseif characterObject.MomentumUnit > MomentumConfig.SPRINT_MOMENTUM then
         newAnim = "FullSprintAnim"
     else
         newAnim = "SprintAnim"
     end
 
-    if characterObject.currentMovementAnim == newAnim then return end
+    if characterObject.currentMovementAnim == newAnim then 
+        local adjustment
+        if characterObject.currentMovementAnim == "StartupAnim" then
+            adjustment = MomentumConfig.STARTUP_MOMENTUM / 2
+        elseif characterObject.currentMovementAnim == "SprintAnim" then
+            adjustment = MomentumConfig.SPRINT_MOMENTUM / 10
+        else
+            return
+        end
+
+        AnimationController.AdjustAnimationSpeed("MovementAnims", characterObject.currentMovementAnim, (characterObject.MomentumUnit / adjustment) * 2)
+        return 
+    end
 
     if characterObject.currentMovementAnim then
         AnimationController.StopAnimation("MovementAnims", characterObject.currentMovementAnim)

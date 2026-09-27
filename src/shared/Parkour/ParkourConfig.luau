@@ -10,7 +10,10 @@ local ParkourConfig = {
     Momentum = {
         MIN_MOVE_SPEED = 12,
         MAX_MOMENTUM = 100,
-        MIN_MOMENTUM = 0
+        MIN_MOMENTUM = 0,
+        MAX_RISING_MOMENTUM = 10,
+        STARTUP_MOMENTUM = 10,
+        SPRINT_MOMENTUM = 90
     }
 
 
