@@ -5,4 +5,7 @@
 /*.rbxlx.lock
 /*.rbxl.lock
 
+#Roblox Player Module
+src/client/PlayerModule
+
 sourcemap.json

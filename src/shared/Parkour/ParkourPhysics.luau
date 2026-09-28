@@ -33,7 +33,7 @@ local function validateHit(result)
 
     local model = result.Instance:FindFirstAncestorOfClass("Model")
 
-    if model and model:FindFirstChildOfClas("Humanoid") then
+    if model and model:FindFirstChildOfClass("Humanoid") then
         return nil
     end
 
@@ -41,13 +41,13 @@ local function validateHit(result)
 end
 
 
-function ParkourPhysics.DetectObstacle(character)
+function ParkourPhysics.DetectObstacle(character, vaultDistance)
     local root = character:FindFirstChild("HumanoidRootPart")
     local humanoid = character:FindFirstChild("Humanoid")
 
     if not root or not humanoid then return nil end
 
-    local VAULT_DISTANCE = ParkourConfig.Vault.VAULT_DISTANCE
+    local VAULT_DISTANCE = vaultDistance
 
     if humanoid.MoveDirection.Magnitude == 0 then return end
 

@@ -46,6 +46,7 @@ function CharacterClass:BindCharacter(character)
     self.Humanoid = character:WaitForChild("Humanoid")
     self.RootPart = character:WaitForChild("HumanoidRootPart")
     self.Humanoid.WalkSpeed = MomentumConfig.MIN_MOVE_SPEED
+    self.Humanoid.JumpHeight = 3
 
     self.MovementAttachment = Instance.new("Attachment")
     self.MovementAttachment.Name = "MovementAttachment"
@@ -81,7 +82,10 @@ end
 --VAULTING--
 
 function CharacterClass:UpdateVaultObject()
-    local vaultObjData, traversalType = ParkourPhysics.DetectObstacle(self.Character)
+    local momentumPercent = math.clamp((self.MomentumUnit / MomentumConfig.MAX_MOMENTUM), 0, 1)
+    local vaultDistance = VaultConfig.MIN_VAULT_DISTANCE + (VaultConfig.MAX_VAULT_DISTANCE - VaultConfig.MIN_VAULT_DISTANCE) * momentumPercent
+
+    local vaultObjData, traversalType = ParkourPhysics.DetectObstacle(self.Character, vaultDistance)
     
     self.vaultObject = vaultObjData
     self.traversalType = traversalType
@@ -134,6 +138,7 @@ function CharacterClass:VaultOrHurdle()
         lv.VectorVelocity = flatLook * forwardSpeed + Vector3.new(0, 1.5, 0)
         align.CFrame = CFrame.lookAt(Vector3.zero, flatLook)
         hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
+        self.AnimationController.PlayAnimation("ParkourAnims", "HurdleAnim")
     end
 
     lv.Parent = root
