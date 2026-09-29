@@ -91,9 +91,12 @@ end)
 RunService.PostSimulation:Connect(function(deltaTime)
     characterObject:UpdateMomentum(deltaTime)
 
-    if isKeyDown("Shift") and characterObject.isSliding then
+    if isKeyDown("LeftShift") and isKeyDown("W") and characterObject.isSliding and characterObject.MomentumUnit > 0 then
         characterObject:SlideDecay(deltaTime)
+        characterObject.Humanoid:Move(characterObject.SlideDirection, false)
         characterObject.currentMovementAnim = "SlideAnim"
+    else
+        characterObject:EndSlide()
     end
 end)
 

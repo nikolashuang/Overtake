@@ -35,6 +35,7 @@ function CharacterClass.new(player, system)
     self.ableVault = false
     self.vaultObject = nil
     self.traversalType = nil
+    self.SlideDirection = nil
     self.isSliding = false
 
     self.LastLunge = 0
@@ -60,11 +61,12 @@ function CharacterClass:BindCharacter(character)
 end
 
 function CharacterClass:UpdateMomentum(deltaTime)
+
     local isMoving = self.Humanoid.MoveDirection.Magnitude > 0
     self.Humanoid.WalkSpeed = MomentumConfig.MIN_MOVE_SPEED
 
 
-    if isMoving then
+    if isMoving and not self.isSliding then
         if self.MomentumUnit < MomentumConfig.MAX_MOMENTUM then
             self.Stationary = 0
             self.MomentumUnit += self.RisingMomentum * deltaTime
@@ -85,7 +87,7 @@ function CharacterClass:UpdateMomentum(deltaTime)
 end
 
 function CharacterClass:ConsumeMomentum(value, deltaTime)
-    self.MomentumUnit -= value * (deltaTime or 1)
+    self.MomentumUnit = math.max(MomentumConfig.MIN_MOMENTUM, self.MomentumUnit - value * (deltaTime or 1))
 end
 
 --VAULTING--
@@ -218,11 +220,27 @@ end
 --SLIDING--
 
 function CharacterClass:CanSlide()
-    if self.MomentumUnit < 65 and not self.isSliding then return false end
-    if not self.Staggered then return false end
+    if self.isSliding then return false end
+    if self.MomentumUnit < MomentumConfig.MIN_SLIDING_MOMENTUM then return false end
+    if self.Staggered then return false end
     if self.Humanoid:GetState() == Enum.HumanoidStateType.Freefall then return false end
 
     return true
+end
+
+function CharacterClass:Slide()
+    self.isSliding = true
+    self.Humanoid.AutoRotate = false
+    self.SlideDirection = self.Humanoid.MoveDirection.Unit
+
+    self.AnimationController.PlayAnimation("ParkourAnims", "SlideAnim")
+end
+
+function CharacterClass:EndSlide()
+    self.isSliding = false
+    self.Humanoid.AutoRotate = true
+    self.SlideDirection = nil
+    self.AnimationController.StopAnimation("ParkourAnims", "SlideAnim")
 end
 
 function CharacterClass:SlideDecay(deltaTime)

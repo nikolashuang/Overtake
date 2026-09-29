@@ -51,7 +51,7 @@ function ParkourController.AttemptLunge()
 end
 
 function ParkourController.AttemptSlide()
-    characterObject.isSliding = true
+    characterObject:Slide()
     pRemote:FireServer("Sliding")
 end
 

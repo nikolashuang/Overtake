@@ -12,7 +12,7 @@ local AnimationStorage = {
     ParkourAnims = {
         VaultVariant1 = AnimationFolder.Parkour:FindFirstChild("VaultVariant1"),
         HurdleAnim = AnimationFolder.Parkour:FindFirstChild("Hurdle"),
-        SlideAnim = AnimationFolder.Movement:FindFirstChild("Slide"),
+        SlideAnim = AnimationFolder.Parkour:FindFirstChild("Slide"),
     }
 
 }
