@@ -1,0 +1,312 @@
+# OVERTAKE_DESIGN.md
+
+> **DO NOT CHANGE ANY CODE while creating, maintaining, or refreshing this design document unless the user explicitly asks for code changes.**
+>
+> This document holds broader gameplay/design direction. `OVERTAKE_CONTEXT.md` is the canonical source for current architecture, implementation state, conventions, and known technical issues.
+>
+> **ALL MEASUREMENT UNITS ARE RECORDED IN STUDS unless otherwise stated.**
+
+# Core Direction
+
+Overtake is a competitive parkour/racing game built around:
+- Movement mastery.
+- Momentum management.
+- Route choice.
+- Execution and timing.
+- Shortcuts and recovery.
+- Light contact mechanics that interfere with opponents without turning the game into a traditional fighting game.
+
+Momentum is the central movement resource. Movement techniques can preserve, consume, lose, or build it.
+
+# Parkour Mechanics
+
+## Vaulting and Vault Boosting
+- Standard vaulting is primarily a way to clear slightly tall obstacles while retaining Momentum.
+- Taller obstacles become more mantle-like and consume Momentum.
+- Timing a jump onto/over shorter vaultable objects can produce a small forward boost at a small Momentum cost.
+- The boost is situational; ordinary vaulting may be better when extra distance/height is unnecessary.
+
+### Vaulting Heights
+- Max Vault Height: 4
+- Min Vault Height: 2.5
+- Anything below 2.5 is considered a hurdle.
+
+### Vaulting Feel
+- Waist-level vault: fast and smooth; favor stable forward velocity.
+- Head-only / taller traversal: mantle-like, with more upward movement and a Momentum cost.
+
+## Wall Hop / Wall Boosting
+- Wall hops help gain height while scaling a wall.
+- Correct tethered technique can outperform a normal hop.
+- Quickly rotating the camera roughly 90 degrees as part of the technique may create a considerable boost.
+- Ordinary wall hops consume Momentum.
+- Successful wall boosting preserves Momentum.
+
+Exact timing and exploit-resistant implementation are undecided.
+
+## Wall Runs
+- Allows traversal along walls when there is not perfect footing below.
+- The path should slope slightly downward as the run expires.
+- Wall running consumes Momentum.
+
+## Edge Boosting
+- Correct technique lets the player boost strongly off an edge.
+- Intended to increase Momentum.
+- **Status: under review.**
+
+## Sliding
+- Uses **Shift**.
+- Lets the player traverse beneath low geometry / heights below the character.
+- Retains most Momentum during a useful slide.
+- Staying in the slide for the full bar/duration should eventually slow the player significantly and lose Momentum.
+
+## Recovery Roll
+- Uses **Shift**
+- Within 0.3 seconds: retain Momentum.
+- Within 0.5 seconds: lose some Momentum.
+- No successful roll: lose almost all Momentum and receive a small stagger.
+
+## Wall Redirect
+- Lets the player bounce/redirect onto adjacent walls.
+- Good timing should enable efficient scaling of tight spaces.
+- Mistiming can cause a slip.
+- Builds a small amount of Momentum.
+
+## Ledge Catching
+- If the player narrowly misses a ledge while falling, ledge catching can prevent the fall.
+- A defensive catch costs almost all Momentum.
+- Catching a ledge during a jump can transition into an upward vault and can grant a small amount of Momentum.
+
+## Power Jumping
+Current design name: **Power Jumping**.
+Current implementation name in code: **Lunge**.
+
+Input direction:
+- Tap Middle Mouse Button, then Space shortly afterward.
+- MMB is a setup/timing input, not intended as a hold.
+
+Design intent:
+- At/near max movement speed, jumps become significantly longer.
+- Consumes Momentum.
+- Has a cooldown to prevent repeated use.
+
+# Momentum
+- Momentum is the central movement resource.
+- Momentum contributes directly to movement speed.
+- Simply running should build Momentum over time.
+- Correct parkour can preserve/build Momentum.
+- Mistakes, inactivity, inefficient movement, some traversal techniques, and contact mechanics can consume Momentum.
+- Normal implementation currently targets 0–100 Momentum.
+
+## Uncapped Flow
+- Flow State can temporarily add Momentum beyond the normal cap.
+- Normal Momentum bar: intended blue.
+- Extra Flow-generated amount: orange.
+- Orange portion is **Uncapped Flow**.
+
+# Contact Mechanics
+
+Contact is intended as race interference / contact-sport mechanics, not traditional combat.
+
+## Sliding / Tripping
+- Sliding creates small hitboxes around the feet.
+- Connecting with another player's legs trips them briefly and pushes them slightly sideways.
+- Attacker consumes 10% Momentum on a successful hit.
+- Victim loses 15% Momentum.
+
+## Shove
+- Players can run into/shoulder bump another player.
+- Attacker consumes 25% Momentum.
+- Victim loses 35% Momentum.
+
+## Dropkick
+- While falling, use foot hitboxes.
+- Connecting with another player's body staggers both players.
+- Attacker consumes 55% Momentum.
+- Victim loses 65% Momentum.
+
+# Attributes
+
+Normal players can equip up to **two** attributes.
+
+## Anchored Footing
+- More resistant to stagger from Slides and Shoves.
+- Retains some Momentum when affected.
+- No special protection against Dropkick.
+- Larger Recovery Roll timing window.
+
+## Swift Feet
+- Slightly longer Wall Runs.
+- Wall Runs consume less Momentum.
+- Sliding retains more Momentum.
+
+## Heavy Landing
+- Dropkick staggers the opponent longer.
+- Shoves are slightly stronger.
+- Retains some Momentum when using contact abilities.
+
+## Flow State
+- Correct movement gradually builds Flow stacks.
+- Significant mistakes clear Flow.
+- Maximum stacks grant **Flow State High**.
+- Flow State High temporarily grants additional Momentum beyond the normal cap.
+- Extra Momentum should be highlighted in orange and treated as Uncapped Flow.
+
+## Quick Recovery
+- Reduces Momentum penalties associated with Ledge Catching.
+- Improves Recovery Roll protection against Momentum loss.
+
+## Overdrive
+Activation:
+- Available at Max Momentum.
+- Player consumes 100% of normal Momentum for temporary additive benefits.
+
+Intended temporary benefits:
+- Burst of speed for X seconds.
+- Contact immunity for X seconds.
+
+Afterward:
+- Player becomes fatigued for 10 seconds.
+- Fatigue reduces Momentum gained from movement/parkour.
+- During fatigue, effective Momentum is capped at 75% of normal maximum.
+
+# Gadgets — Future Scope
+
+Players may equip only one gadget.
+
+## Angle Hooker
+- Lets the player hook around buildings.
+- Builds a small amount of Momentum.
+
+## Body Crasher
+- Player crashes into the ground and creates a small shockwave.
+- Nearby opponents are slowed.
+- User is also slowed, but less severely.
+- Single-use.
+
+# Ranked
+
+## Base Rank Progression
+- Everyone begins **Unranked**.
+- 50 Elo/rating points are required to reach Bronze.
+- Once Bronze is reached, the player should not fall below Bronze.
+- Unranked acts like a provisional period before normal ranked progression.
+
+Target progression:
+- Bronze
+- Silver
+- Gold
+- Diamond
+
+Current repository thresholds:
+- Unranked: 0
+- Bronze: 50
+- Silver: 350
+- Gold: 650
+- Diamond: 950
+- Apex: 1250
+- Defiant: 1550
+- Unbound: 1950
+
+## Apex
+- Unlimited players may reach Apex.
+
+## Defiant
+- After roughly 30 players reach Defiant, the entry gate becomes the current 30th player's Elo.
+- Dropping below the qualifying top group demotes the player to Apex.
+- Exact player count is undecided.
+
+## Unbound
+- After roughly 15 players reach Unbound, the entry gate becomes the current 15th player's Elo.
+- Dropping below the qualifying top group demotes the player to Defiant.
+- Exact player count is undecided.
+
+## Hardcore Ranked Modifier
+- Both players must accept before the race.
+- Increased rating stakes.
+- Falling off course = disqualification.
+- Otherwise uses the same race mechanics.
+
+# Menu / Modes
+
+## Multiplayer
+
+### Ranked
+- Ranked 1s.
+- Ranked 2s is a possible future option and not confirmed.
+
+### Casual
+
+#### Multiplayer Racing
+- Similar core race format to Ranked.
+- Multiple players in one server.
+- Maps rotate.
+- Players compete for first place.
+- More chaotic and lower-stakes than Ranked.
+
+#### Gauntlet
+- 20 players.
+- 10 different maps.
+- Each player starts at 100 HP.
+- Players face different opponents in 1v1 rounds.
+- Winning keeps the player safe.
+- Losing removes HP based on round depth.
+- Last player standing wins.
+- Every 2 rounds, players can select a new Attribute up to a maximum of 4.
+- Later selection points can allow keeping or swapping Attributes.
+
+### Rotating / Event Modes
+Possible:
+- Storm Chase.
+- Tower Climb / Flood Escape.
+
+## Singleplayer
+
+### Challenge
+- Multiple challenges/levels for practicing and improving.
+- Challenges can alter normal rules to create specific movement tests.
+
+### Practice Tool
+- Choose from available maps.
+- Freeform movement/flying around the map to revisit sections and practice mistakes.
+
+### Time Trials
+- Race any map against the clock.
+- Per-map fastest-time leaderboards.
+
+# Inventory / Shop
+- Inventory.
+- Shop.
+- Robux cosmetic/content assets.
+- Current noted product idea: 12 FPS animation pack.
+- Avoid pay-to-win movement advantages in competitive/ranked play.
+
+# Settings
+A Settings area is planned.
+The profile template already reserves a `Settings` table.
+
+# Scope Notes
+- Movement feel and the race loop are the priority.
+- Ranked, contact mechanics, attributes, anti-exploit validation, matchmaking, and content production are each large systems.
+- Gadgets and rotating modes should remain future scope until the core race experience is strong.
+- Do not treat every brainstormed mechanic as launch scope.
+
+# Design Decisions Needing Confirmation
+- Keep or remove Edge Boosting.
+- Final Power Jump requirement: max Momentum vs high Momentum vs fixed minimum.
+- Ranked 2s.
+- Defiant qualifying player count.
+- Unbound qualifying player count.
+- Hardcore unlock requirement and rating stakes.
+- Exact contact Momentum percentages after playtesting.
+- Exact Overdrive duration/stat bonuses.
+- Exact Wall Hop camera/timing rules.
+- Which rotating modes belong in initial release.
+
+# Documentation Maintenance Rule
+When asked to update this design document:
+1. **DO NOT CHANGE ANY CODE unless the user explicitly asks for code changes.**
+2. Preserve confirmed mechanics and clearly mark uncertain ideas.
+3. Put implementation/architecture facts in `OVERTAKE_CONTEXT.md`.
+4. Put broad gameplay intentions, balance targets, modes, progression, and future concepts here.
+5. Do not silently promote brainstorms into confirmed decisions.

@@ -212,13 +212,6 @@ function CharacterClass:Lunge()
 
 end
 
-function CharacterClass:CanLedgeBoost()
-
-end
-
-function CharacterClass:LedgeBoost()
-
-end
 ---------------------------------------------------------------------------------------------------
 
 --SLIDING--
