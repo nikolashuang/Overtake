@@ -93,10 +93,15 @@ RunService.PostSimulation:Connect(function(deltaTime)
 
     if isKeyDown("LeftShift") and isKeyDown("W") and characterObject.isSliding and characterObject.MomentumUnit > 0 then
         characterObject:SlideDecay(deltaTime)
-        characterObject.Humanoid:Move(characterObject.SlideDirection, false)
         characterObject.currentMovementAnim = "SlideAnim"
     else
         characterObject:EndSlide()
+    end
+end)
+
+RunService:BindToRenderStep("LockSlideDirection", Enum.RenderPriority.Character.Value, function()
+    if characterObject.isSliding then
+        characterObject.Humanoid:Move(characterObject.SlideDirection, false)
     end
 end)
 

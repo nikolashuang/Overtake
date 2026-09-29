@@ -240,6 +240,8 @@ function CharacterClass:EndSlide()
     self.isSliding = false
     self.Humanoid.AutoRotate = true
     self.SlideDirection = nil
+
+
     self.AnimationController.StopAnimation("ParkourAnims", "SlideAnim")
 end
 
