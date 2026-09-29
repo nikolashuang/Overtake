@@ -18,8 +18,6 @@ Players.PlayerAdded:Connect(function(player)
 
     local plrCharacter = CharacterClass.new(player, profile)
 
-    Characters[player] = plrCharacter
-
     if player.Character then
         plrCharacter:BindCharacter(player.Character)
     end
@@ -27,6 +25,8 @@ Players.PlayerAdded:Connect(function(player)
     player.CharacterAdded:Connect(function(character)
         plrCharacter:BindCharacter(character)
     end)
+
+    Characters[player] = plrCharacter
 end)
 
 Players.PlayerRemoving:Connect(function(player)
@@ -44,10 +44,11 @@ pRemote.OnServerEvent:Connect(function(player, traversalType)
     if not character then return end
 
     if traversalType == "Vaulting" then
-        character:VaultOrHurdle()
+        
     end
 end)
-
+ 
+--[[
 
 RunService.PostSimulation:Connect(function(deltaTime)
     for _, character in pairs(Characters) do
@@ -55,3 +56,4 @@ RunService.PostSimulation:Connect(function(deltaTime)
     end
 
 end)
+]]

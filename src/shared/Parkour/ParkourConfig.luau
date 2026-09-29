@@ -20,6 +20,7 @@ local ParkourConfig = {
     Boost = {
         LUNGE_WINDOW = 0.2,
         LUNGE_HEIGHT = 5.5,
+        LUNGE_POWER = 30,
         LUNGE_CD = 0.75,
         LUNGE_CONSUMPTION = 20
 

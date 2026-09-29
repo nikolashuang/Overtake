@@ -22,6 +22,7 @@ function ParkourController.HandleInput(input)
 end
 
 function ParkourController.HandleSpaceInput()
+    print(time() - mb3)
     if characterObject:CanLunge() and time() - mb3 < BoostConfig.LUNGE_WINDOW then
         ParkourController.AttemptLunge()
         mb3 = nil

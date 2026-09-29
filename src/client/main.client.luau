@@ -33,6 +33,8 @@ UserInput.InputBegan:Connect(function(input, processed)
 
     if input.KeyCode == Enum.KeyCode.Space then
         ParkourController.HandleSpaceInput()
+    else
+        ParkourController.HandleInput(input)
     end
 
 end)
@@ -64,7 +66,7 @@ RunService.PreRender:Connect(function()
         if characterObject.currentMovementAnim == "StartupAnim" then
             adjustment = MomentumConfig.STARTUP_MOMENTUM / 2
         elseif characterObject.currentMovementAnim == "SprintAnim" then
-            adjustment = MomentumConfig.MAX_MOMENTUM / 10
+            adjustment = MomentumConfig.MAX_MOMENTUM / 6
         else
             return
         end

@@ -83,7 +83,7 @@ function CharacterClass:UpdateMomentum(deltaTime)
         end
     end
 
-    print(self.MomentumUnit)
+    --print(self.MomentumUnit)
     self.Humanoid.WalkSpeed += (self.MomentumUnit * 0.3)
 end
 
@@ -168,16 +168,22 @@ function CharacterClass:CanLunge()
     if self.MomentumUnit < 25 then return end
     if self.Staggered then return end
     if time() - self.LastLunge < BoostConfig.LUNGE_CD then return end
-    if not self:IsGrounded() then return end
+    if self.Humanoid:GetState() == Enum.HumanoidStateType.Freefall then return end
 
+    print(true)
     return true
 end
 
 function CharacterClass:Lunge()
     local root = self.RootPart
+    local hum = self.Humanoid
 
-    self.Humanoid.JumpHeight = BoostConfig.LUNGE_HEIGHT
     self.LastLunge = time()
+
+    local align = Instance.new("AlignOrientation")
+    align.Attachment0 = self.MovementAttachment
+    align.Mode = Enum.OrientationAlignmentMode.OneAttachment
+    align.RigidityEnabled = true
 
     local lv = Instance.new("LinearVelocity")
     lv.Attachment0 = self.MovementAttachment
@@ -189,10 +195,20 @@ function CharacterClass:Lunge()
     local flatLook = Vector3.new(look.X, 0, look.Z).Unit
     local forwardSpeed = currentVelocity:Dot(flatLook)
 
-    lv.VectorVelocity = flatLook * forwardSpeed
+    lv.VectorVelocity = flatLook * (forwardSpeed + BoostConfig.LUNGE_POWER) + Vector3.new(0, BoostConfig.LUNGE_HEIGHT, 0)
+    align.CFrame = CFrame.lookAt(Vector3.zero, flatLook)
+    hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
 
     ConsumeMomentum(self, BoostConfig.LUNGE_CONSUMPTION)
     self.AnimationController.PlayAnimation("MovementAnims", "LungeAnim")
+
+    lv.Parent = root
+    Debris:AddItem(lv, 0.5)
+    Debris:AddItem(align, 0.5)
+
+    task.delay(0.5, function()
+        hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
+    end)
 
 end
 
