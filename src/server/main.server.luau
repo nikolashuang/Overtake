@@ -1,3 +1,4 @@
+local RunService = game:GetService("RunService")
 local ServerScriptService = game:GetService("ServerScriptService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
@@ -45,4 +46,12 @@ pRemote.OnServerEvent:Connect(function(player, traversalType)
     if traversalType == "Vaulting" then
         character:VaultOrHurdle()
     end
+end)
+
+
+RunService.PostSimulation:Connect(function(deltaTime)
+    for _, character in pairs(Characters) do
+        character:UpdateMomentum(deltaTime)
+    end
+
 end)

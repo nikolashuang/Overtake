@@ -3,6 +3,7 @@ local AnimationFolder = RepStorage.Animations
 
 local AnimationStorage = {
     MovementAnims = {
+        LungeAnim = AnimationFolder.Movement:FindFirstChild("Lunge"),
         StartupAnim = AnimationFolder.Movement:FindFirstChild("Startup"),
         SprintAnim = AnimationFolder.Movement:FindFirstChild("Sprint"),
         FullSprintAnim = AnimationFolder.Movement:FindFirstChild("FullSprint")
@@ -73,7 +74,7 @@ function AnimationController.AdjustAnimationSpeed(storage, anim, speed)
     local animationTrack = storageTable[anim]
     if not animationTrack then return end
 
-    local trackSpeed = math.min(1, speed)
+    local trackSpeed = math.min(1.3, speed)
 
     animationTrack:AdjustSpeed(trackSpeed)
 end

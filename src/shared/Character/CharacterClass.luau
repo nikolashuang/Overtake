@@ -6,6 +6,7 @@ local ParkourConfig = require(RepStorage.Shared.Parkour.ParkourConfig)
 
 local VaultConfig = ParkourConfig.Vault
 local MomentumConfig = ParkourConfig.Momentum
+local BoostConfig = ParkourConfig.Boost
 
 local CharacterClass = {}
 
@@ -35,11 +36,18 @@ function CharacterClass.new(player, system)
     self.vaultObject = nil
     self.traversalType = nil
 
+    self.LastLunge = 0
+
     self.currentMovementAnim = nil
 
 
     return self
 end
+
+local function ConsumeMomentum(self, value)
+    self.MomentumUnit -= value
+end
+
 
 function CharacterClass:BindCharacter(character)
     self.Character = character
@@ -63,7 +71,7 @@ function CharacterClass:UpdateMomentum(deltaTime)
         if self.MomentumUnit < MomentumConfig.MAX_MOMENTUM then
             self.Stationary = 0
             self.MomentumUnit += self.RisingMomentum * deltaTime
-            self.RisingMomentum = math.min(MomentumConfig.MAX_RISING_MOMENTUM, self.RisingMomentum + 0.2)
+            self.RisingMomentum = math.min(MomentumConfig.MAX_RISING_MOMENTUM, self.RisingMomentum + 0.5)
         elseif self.MomentumUnit >= MomentumConfig.MAX_MOMENTUM then
             self.MomentumUnit = MomentumConfig.MAX_MOMENTUM
         end
@@ -131,6 +139,7 @@ function CharacterClass:VaultOrHurdle()
         else
             lv.VectorVelocity = flatLook * (forwardSpeed + 15) + Vector3.new(0, 9, 0)
             self.AnimationController.PlayAnimation("ParkourAnims", "VaultVariant1")
+            ConsumeMomentum(self, VaultConfig.TALL_VAULT_CONSUMPTION)
         end
         align.CFrame = CFrame.lookAt(Vector3.zero, flatLook)
         hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
@@ -152,6 +161,46 @@ function CharacterClass:VaultOrHurdle()
     end)
 
 end
+
+---------------------------------------------------------------------------------------------------
+
+--POWER JUMP--
+
+function CharacterClass:CanLunge()
+    if self.MomentumUnit < 25 then return end
+    if self.Staggered then return end
+    if time() - self.LastLunge < BoostConfig.POWER_JUMP_CD then return end
+    if not self:IsGrounded() then return end
+
+    return true
+end
+
+function CharacterClass:Lunge()
+    if not self:CanLunge() then return end
+
+    local root = self.RootPart
+
+    self.Humanoid.JumpHeight = BoostConfig.POWER_JUMP_HEIGHT
+    self.LastLunge = time()
+
+    local lv = Instance.new("LinearVelocity")
+    lv.Attachment0 = self.MovementAttachment
+    lv.RelativeTo = Enum.ActuatorRelativeTo.World
+    lv.ForceLimitsEnabled = false
+
+    local currentVelocity = root.AssemblyLinearVelocity
+    local look = root.CFrame.LookVector
+    local flatLook = Vector3.new(look.X, 0, look.Z).Unit
+    local forwardSpeed = currentVelocity:Dot(flatLook)
+
+    lv.VectorVelocity = flatLook * forwardSpeed
+
+    ConsumeMomentum(self, BoostConfig.POWER_JUMP_CONSUMPTION)
+    self.AnimationController.PlayAnimation("MovementAnims", "LungeAnim")
+
+end
+
+---------------------------------------------------------------------------------------------------
 
 function CharacterClass:Slide()
 

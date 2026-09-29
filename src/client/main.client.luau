@@ -27,7 +27,10 @@ player.CharacterAdded:Connect(function(newCharacter)
 end)
 
 UserInput.InputBegan:Connect(function(input, processed)
-    ParkourController.AttemptVault(input, processed)
+    if processed then return end
+
+    
+
 end)
 
 
@@ -48,8 +51,6 @@ RunService.PreRender:Connect(function()
 
     if characterObject.MomentumUnit < MomentumConfig.STARTUP_MOMENTUM then
         newAnim = "StartupAnim"
-    elseif characterObject.MomentumUnit > MomentumConfig.SPRINT_MOMENTUM then
-        newAnim = "FullSprintAnim"
     else
         newAnim = "SprintAnim"
     end
@@ -59,7 +60,7 @@ RunService.PreRender:Connect(function()
         if characterObject.currentMovementAnim == "StartupAnim" then
             adjustment = MomentumConfig.STARTUP_MOMENTUM / 2
         elseif characterObject.currentMovementAnim == "SprintAnim" then
-            adjustment = MomentumConfig.SPRINT_MOMENTUM / 10
+            adjustment = MomentumConfig.MAX_MOMENTUM / 10
         else
             return
         end
