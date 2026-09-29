@@ -11,7 +11,8 @@ local AnimationStorage = {
 
     ParkourAnims = {
         VaultVariant1 = AnimationFolder.Parkour:FindFirstChild("VaultVariant1"),
-        HurdleAnim = AnimationFolder.Parkour:FindFirstChild("Hurdle")
+        HurdleAnim = AnimationFolder.Parkour:FindFirstChild("Hurdle"),
+        SlideAnim = AnimationFolder.Movement:FindFirstChild("Slide"),
     }
 
 }
@@ -74,7 +75,7 @@ function AnimationController.AdjustAnimationSpeed(storage, anim, speed)
     local animationTrack = storageTable[anim]
     if not animationTrack then return end
 
-    local trackSpeed = math.min(1.3, speed)
+    local trackSpeed = math.min(1.6, speed)
 
     animationTrack:AdjustSpeed(trackSpeed)
 end

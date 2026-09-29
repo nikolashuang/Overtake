@@ -5,7 +5,7 @@ local BoostConfig = ParkourConfig.Boost
 
 local pRemote = RepStorage.Remotes.ParkourRemote
 local characterObject = nil
-local mb3 = nil
+local mb3 = 0
 
 
 local ParkourController = {}
@@ -15,6 +15,11 @@ function ParkourController.Init(CharInfo)
 end
 
 function ParkourController.HandleInput(input)
+    if input.KeyCode == Enum.KeyCode.LeftShift and characterObject:CanSlide() then
+        ParkourController.AttemptSlide()
+        return
+    end
+
     if input.UserInputType == Enum.UserInputType.MouseButton3 then
         mb3 = time()
         return
@@ -24,7 +29,6 @@ end
 function ParkourController.HandleSpaceInput()
     if characterObject:CanLunge() and time() - mb3 < BoostConfig.LUNGE_WINDOW then
         ParkourController.AttemptLunge()
-        mb3 = nil
         return
     end
 
@@ -33,7 +37,6 @@ function ParkourController.HandleSpaceInput()
         return
     end
 end
-
 
 
 function ParkourController.AttemptVault()
@@ -47,6 +50,10 @@ function ParkourController.AttemptLunge()
     pRemote:FireServer("Lunging")
 end
 
+function ParkourController.AttemptSlide()
+    characterObject.isSliding = true
+    pRemote:FireServer("Sliding")
+end
 
 
 return ParkourController

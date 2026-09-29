@@ -35,6 +35,7 @@ function CharacterClass.new(player, system)
     self.ableVault = false
     self.vaultObject = nil
     self.traversalType = nil
+    self.isSliding = false
 
     self.LastLunge = 0
 
@@ -42,10 +43,6 @@ function CharacterClass.new(player, system)
 
 
     return self
-end
-
-local function ConsumeMomentum(self, value)
-    self.MomentumUnit -= value
 end
 
 
@@ -83,8 +80,12 @@ function CharacterClass:UpdateMomentum(deltaTime)
         end
     end
 
-    --print(self.MomentumUnit)
-    self.Humanoid.WalkSpeed += (self.MomentumUnit * 0.3)
+    print(self.MomentumUnit)
+    self.Humanoid.WalkSpeed += (self.MomentumUnit * 0.25)
+end
+
+function CharacterClass:ConsumeMomentum(value, deltaTime)
+    self.MomentumUnit -= value * (deltaTime or 1)
 end
 
 --VAULTING--
@@ -137,7 +138,7 @@ function CharacterClass:VaultOrHurdle()
         else
             lv.VectorVelocity = flatLook * (forwardSpeed + 15) + Vector3.new(0, 9, 0)
             self.AnimationController.PlayAnimation("ParkourAnims", "VaultVariant1")
-            ConsumeMomentum(self, VaultConfig.TALL_VAULT_CONSUMPTION)
+            self:ConsumeMomentum(VaultConfig.TALL_VAULT_CONSUMPTION)
         end
         align.CFrame = CFrame.lookAt(Vector3.zero, flatLook)
         hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
@@ -199,12 +200,12 @@ function CharacterClass:Lunge()
     align.CFrame = CFrame.lookAt(Vector3.zero, flatLook)
     hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
 
-    ConsumeMomentum(self, BoostConfig.LUNGE_CONSUMPTION)
+    self:ConsumeMomentum(BoostConfig.LUNGE_CONSUMPTION)
     self.AnimationController.PlayAnimation("MovementAnims", "LungeAnim")
 
     lv.Parent = root
-    Debris:AddItem(lv, 0.5)
-    Debris:AddItem(align, 0.5)
+    Debris:AddItem(lv, 0.3)
+    Debris:AddItem(align, 0.3)
 
     task.delay(0.5, function()
         hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
@@ -217,13 +218,16 @@ end
 --SLIDING--
 
 function CharacterClass:CanSlide()
+    if self.MomentumUnit < 65 and not self.isSliding then return false end
+    if not self.Staggered then return false end
+    if self.Humanoid:GetState() == Enum.HumanoidStateType.Freefall then return false end
 
+    return true
 end
 
-function CharacterClass:Slide()
-
+function CharacterClass:SlideDecay(deltaTime)
+    self:ConsumeMomentum(MomentumConfig.SLIDING_CONSUMPTION_DECAY, deltaTime)
 end
-
 ---------------------------------------------------------------------------------------------------
 
 function CharacterClass:CanWallRun()

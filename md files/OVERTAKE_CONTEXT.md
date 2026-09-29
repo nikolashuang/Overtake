@@ -11,6 +11,7 @@
 - **Project:** Overtake
 - **Platform:** Roblox
 - **Language:** Luau
+- **Character rig:** R15
 - **Repo:** `nikolashuang/Overtake`
 - **Default branch:** `master`
 - **Project sync/build:** Rojo
@@ -354,6 +355,7 @@ These are context notes, **not permission to change code automatically**.
 - Use `time()`/elapsed seconds for input combo windows rather than treating `tick()` as a frame counter.
 - Do not trust arbitrary traversal names, Momentum values, contact hits, ratings, or persistent outcomes sent by the client.
 - This is a movement/contact-sport game, not a fighting game.
+- Overtake uses the **R15** character rig. Treat R6-specific assumptions as incorrect unless explicitly discussing an alternative.
 
 ## Current Work Focus
 

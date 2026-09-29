@@ -22,6 +22,10 @@ local characterObject = ClientCharacter.new(player, {AnimationController = Anima
 characterObject:BindCharacter(character)
 ParkourController.Init(characterObject)
 
+local function isKeyDown(key)
+    return UserInput:IsKeyDown(Enum.KeyCode[key])
+end
+
 player.CharacterAdded:Connect(function(newCharacter)
     characterObject:BindCharacter(newCharacter)
     AnimationController.BindCharacter(newCharacter)
@@ -45,7 +49,7 @@ RunService.PreRender:Connect(function()
 
     local characterState = characterObject.Humanoid:GetState()
 
-    if characterObject.Humanoid.MoveDirection.Magnitude <= 0 or characterState == Enum.HumanoidStateType.Jumping or characterState == Enum.HumanoidStateType.Freefall then
+    if characterObject.Humanoid.MoveDirection.Magnitude <= 0 or characterState == Enum.HumanoidStateType.Jumping or characterState == Enum.HumanoidStateType.Freefall or characterObject.isSliding then
         AnimationController.StopAnimation("MovementAnims", "StartupAnim")
         AnimationController.StopAnimation("MovementAnims", "FullSprintAnim")
         AnimationController.StopAnimation("MovementAnims", "SprintAnim")
@@ -65,14 +69,15 @@ RunService.PreRender:Connect(function()
         local adjustment
         if characterObject.currentMovementAnim == "StartupAnim" then
             adjustment = MomentumConfig.STARTUP_MOMENTUM / 2
+            AnimationController.AdjustAnimationSpeed("MovementAnims", characterObject.currentMovementAnim, math.min((characterObject.MomentumUnit / adjustment) * 2, 1))
         elseif characterObject.currentMovementAnim == "SprintAnim" then
-            adjustment = MomentumConfig.MAX_MOMENTUM / 6
+            adjustment = MomentumConfig.MAX_MOMENTUM / 2
+            AnimationController.AdjustAnimationSpeed("MovementAnims", characterObject.currentMovementAnim, math.max((characterObject.MomentumUnit / adjustment), 0.85))
         else
             return
         end
 
-        AnimationController.AdjustAnimationSpeed("MovementAnims", characterObject.currentMovementAnim, (characterObject.MomentumUnit / adjustment) * 2)
-        return 
+        return
     end
 
     if characterObject.currentMovementAnim then
@@ -85,5 +90,10 @@ end)
 
 RunService.PostSimulation:Connect(function(deltaTime)
     characterObject:UpdateMomentum(deltaTime)
+
+    if isKeyDown("Shift") and characterObject.isSliding then
+        characterObject:SlideDecay(deltaTime)
+        characterObject.currentMovementAnim = "SlideAnim"
+    end
 end)
 

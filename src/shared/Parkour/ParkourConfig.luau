@@ -13,16 +13,18 @@ local ParkourConfig = {
         MIN_MOVE_SPEED = 12,
         MAX_MOMENTUM = 100,
         MIN_MOMENTUM = 0,
-        MAX_RISING_MOMENTUM = 35,
-        STARTUP_MOMENTUM = 15,
+        MAX_RISING_MOMENTUM = 25,
+        STARTUP_MOMENTUM = 20,
+        SLIDING_CONSUMPTION_DECAY = 50,
+        MIN_SLIDING_MOMENTUM = 65
     },
 
     Boost = {
         LUNGE_WINDOW = 0.2,
-        LUNGE_HEIGHT = 5.5,
+        LUNGE_HEIGHT = 15,
         LUNGE_POWER = 30,
         LUNGE_CD = 0.75,
-        LUNGE_CONSUMPTION = 20
+        LUNGE_CONSUMPTION = 35
 
     }
 
