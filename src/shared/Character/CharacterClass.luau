@@ -31,6 +31,7 @@ function CharacterClass.new(player, system)
 
     self.Staggered = false
     self.Fatigue = false
+    self.HaltMomentum = false
     self.Stationary = 0
 
     self.ableVault = false
@@ -78,19 +79,17 @@ function CharacterClass:UpdateMomentum(deltaTime)
     local isMoving = self.Humanoid.MoveDirection.Magnitude > 0
     self.Humanoid.WalkSpeed = MomentumConfig.MIN_MOVE_SPEED
 
+    if self.HaltMomentum then
+        self.Stationary = 0
 
-    if isMoving and not self.isSliding then
-        if self.MomentumUnit < MomentumConfig.MAX_MOMENTUM then
-            self.Stationary = 0
-            self.MomentumUnit += self.RisingMomentum * deltaTime
-            self.RisingMomentum = math.min(MomentumConfig.MAX_RISING_MOMENTUM, self.RisingMomentum + 0.5)
-        elseif self.MomentumUnit >= MomentumConfig.MAX_MOMENTUM then
-            self.MomentumUnit = MomentumConfig.MAX_MOMENTUM
-        end
+    elseif isMoving then
+        self.Stationary = 0
+        self.MomentumUnit = math.min(MomentumConfig.MAX_MOMENTUM, self.MomentumUnit + self.RisingMomentum * deltaTime)
+        self.RisingMomentum = math.min(MomentumConfig.MAX_RISING_MOMENTUM, self.RisingMomentum + 12 * deltaTime)
     else
-        self.Stationary += 1 * deltaTime
-        if self.Stationary >= 3 and self.MomentumUnit > MomentumConfig.MIN_MOMENTUM then
-            self.MomentumUnit -= 50 * deltaTime
+        self.Stationary += deltaTime
+        if self.Stationary >= 1 and self.MomentumUnit > MomentumConfig.MIN_MOMENTUM then
+            self.MomentumUnit = math.max(MomentumConfig.MIN_MOMENTUM, self.MomentumUnit - 50 * deltaTime)
             self.RisingMomentum = 5
         end
     end
@@ -171,6 +170,7 @@ function CharacterClass:VaultOrHurdle()
             lv.VectorVelocity = flatLook * (forwardSpeed + 15) + Vector3.new(0, 9, 0)
             self.AnimationController.PlayAnimation("ParkourAnims", "VaultVariant1")
             self:ConsumeMomentum(VaultConfig.TALL_VAULT_CONSUMPTION)
+            self.HaltMomentum = true
         end
         align.CFrame = CFrame.lookAt(Vector3.zero, flatLook)
         hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
@@ -189,6 +189,7 @@ function CharacterClass:VaultOrHurdle()
 
     task.delay(VaultConfig.VAULT_DURATION, function()
         hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
+        if self.HaltMomentum then self.HaltMomentum = false end
     end)
 
 end
@@ -212,6 +213,7 @@ function CharacterClass:Lunge()
     local hum = self.Humanoid
 
     self.LastLunge = time()
+    self.HaltMomentum = true
 
     local align = Instance.new("AlignOrientation")
     align.Attachment0 = self.MovementAttachment
@@ -241,6 +243,7 @@ function CharacterClass:Lunge()
 
     task.delay(0.5, function()
         hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
+        self.HaltMomentum = false
     end)
 
 end
@@ -262,6 +265,7 @@ function CharacterClass:Slide()
     self.isSliding = true
     self.Humanoid.AutoRotate = false
     self.SlideDirection = self.Humanoid.MoveDirection.Unit
+    self.HaltMomentum = true
 
     self:ChangeSlideCollision()
 
@@ -272,6 +276,7 @@ function CharacterClass:EndSlide()
     self.isSliding = false
     self.Humanoid.AutoRotate = true
     self.SlideDirection = nil
+    self.HaltMomentum = false
 
     self:ChangeSlideCollision()
 

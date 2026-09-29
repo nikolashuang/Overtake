@@ -63,13 +63,16 @@ Current values:
 - Tall vault Momentum cost: 7.5
 - Base movement speed: 12
 - Momentum range: 0–100
-- Max RisingMomentum: 35
-- Startup Momentum threshold: 15
+- Max RisingMomentum: 25
+- RisingMomentum growth rate: 12 per second
+- Startup Momentum threshold: 20
+- Sliding Momentum drain: 50 per second
+- Minimum sliding Momentum: 65
 - Lunge/Power Jump input window: 0.2 s
-- Lunge height: 5.5
+- Lunge height: 15
 - Lunge power: 30
 - Lunge cooldown: 0.75 s
-- Lunge Momentum cost: 20
+- Lunge Momentum cost: 35
 
 Numbers are balance values and may change. Prefer the config module over duplicating values in logic.
 
@@ -186,17 +189,23 @@ Current code behavior:
 - Starts at 0.
 - Base `RisingMomentum` starts at 5.
 - While moving, Momentum rises by `RisingMomentum * deltaTime`.
-- RisingMomentum itself increases over time up to 35.
-- When stationary, a 3-second grace period occurs before decay.
-- After the grace period, Momentum decays at 50 per second until 0.
-- Stopping resets RisingMomentum to 5 once decay begins.
-- WalkSpeed is recalculated as base 12 + `MomentumUnit * 0.3`.
-- At 100 Momentum this currently yields WalkSpeed 42.
+- `RisingMomentum` increases at 12 units per second up to 25.
+- The 5 → 25 RisingMomentum ramp takes about 1.67 seconds.
+- Momentum gain and decay use `deltaTime` and are frame-rate independent.
+- 60 FPS is used only as a feel-testing/reference baseline.
+- `HaltMomentum` pauses normal Momentum gain/decay while preserving the current `RisingMomentum`.
+- `HaltMomentum` also clears `Stationary`, allowing mechanics such as sliding to consume Momentum without normal gain or stationary decay interfering.
+- When stationary, there is a 1-second grace period before Momentum begins decaying.
+- Momentum decays at 50 per second after the grace period.
+- Once decay begins, `RisingMomentum` resets to 5.
+- WalkSpeed is calculated as base 12 + `MomentumUnit * 0.25`.
+- At 100 Momentum, WalkSpeed is 37.
 - Vault detection distance scales linearly from 4 to 15 based on Momentum percentage.
 
 Design intent:
 - Momentum affects speed and movement power.
-- Different traversal moves preserve, consume, lose, or build Momentum.
+- Different traversal moves can preserve, consume, lose, or build Momentum.
+- Mechanics that continuously consume Momentum can temporarily halt normal Momentum gain.
 - Flow State may temporarily create Momentum beyond the normal cap; this is design-only today.
 
 ## Vaulting / Hurdling — Current Implementation

@@ -91,12 +91,17 @@ Design intent:
 - Has a cooldown to prevent repeated use.
 
 # Momentum
+
 - Momentum is the central movement resource.
 - Momentum contributes directly to movement speed.
-- Simply running should build Momentum over time.
+- Simply running builds Momentum over time.
 - Correct parkour can preserve/build Momentum.
 - Mistakes, inactivity, inefficient movement, some traversal techniques, and contact mechanics can consume Momentum.
 - Normal implementation currently targets 0–100 Momentum.
+- `RisingMomentum` ramps from 5 toward 25 at approximately 12 units per second.
+- RisingMomentum buildup uses `deltaTime` and should remain frame-rate independent.
+- 60 FPS is used only as a feel-testing/reference baseline.
+- Mechanics that intentionally consume Momentum may temporarily halt normal Momentum gain so regeneration does not fight the mechanic's drain.
 
 ## Uncapped Flow
 - Flow State can temporarily add Momentum beyond the normal cap.
@@ -109,21 +114,24 @@ Design intent:
 Contact is intended as race interference / contact-sport mechanics, not traditional combat.
 
 ## Sliding / Tripping
-- Sliding creates small hitboxes around the feet.
-- Connecting with another player's legs trips them briefly and pushes them slightly sideways.
+- While sliding, create two small hitboxes around the player's feet.
+- If they connect with another player's legs, briefly trip the victim and push them slightly sideways.
 - Attacker consumes 10% Momentum on a successful hit.
-- Victim loses 15% Momentum.
+- Victim loses 25% Momentum.
+- Sliding itself also continuously consumes Momentum, so the successful-hit cost is in addition to the normal sliding drain.
 
 ## Shove
 - Players can run into/shoulder bump another player.
-- Attacker consumes 25% Momentum.
-- Victim loses 35% Momentum.
+- Attacker consumes 45% Momentum.
+- Victim loses 70% Momentum.
+- These values are provisional and should be adjusted after playtesting against the current Momentum recovery rate.
 
 ## Dropkick
-- While falling, use foot hitboxes.
-- Connecting with another player's body staggers both players.
-- Attacker consumes 55% Momentum.
-- Victim loses 65% Momentum.
+- While falling, create two small hitboxes around the player's feet.
+- If the hitboxes connect with another player's body, both players immediately stagger onto the floor.
+- Both players lose all Momentum.
+- The victim's `RisingMomentum` is temporarily capped around 10, slowing their Momentum buildup after the hit.
+- The duration and exact implementation of the RisingMomentum cap are still undecided.
 
 # Attributes
 
