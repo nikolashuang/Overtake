@@ -4,18 +4,39 @@ local ParkourConfig = require(RepStorage.Shared.Parkour.ParkourConfig)
 local BoostConfig = ParkourConfig.Boost
 
 local pRemote = RepStorage.Remotes.ParkourRemote
+local characterObject = nil
+local mb3 = nil
+
 
 local ParkourController = {}
-
-local characterObject = nil
 
 function ParkourController.Init(CharInfo)
     characterObject = CharInfo
 end
 
-function ParkourController.AttemptVault()
-    if not characterObject:CanVault() then return end
+function ParkourController.HandleInput(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton3 then
+        mb3 = time()
+        return
+    end
+end
 
+function ParkourController.HandleSpaceInput()
+    if characterObject:CanLunge() and time() - mb3 < BoostConfig.LUNGE_WINDOW then
+        ParkourController.AttemptLunge()
+        mb3 = nil
+        return
+    end
+
+    if characterObject:CanVault() then
+        ParkourController.AttemptVault()
+        return
+    end
+end
+
+
+
+function ParkourController.AttemptVault()
     characterObject:VaultOrHurdle()
     pRemote:FireServer("Vaulting")
 end

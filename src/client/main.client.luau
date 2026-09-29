@@ -23,13 +23,17 @@ characterObject:BindCharacter(character)
 ParkourController.Init(characterObject)
 
 player.CharacterAdded:Connect(function(newCharacter)
+    characterObject:BindCharacter(newCharacter)
     AnimationController.BindCharacter(newCharacter)
+    AnimationController.LoadAllTracks()
 end)
 
 UserInput.InputBegan:Connect(function(input, processed)
     if processed then return end
 
-    
+    if input.KeyCode == Enum.KeyCode.Space then
+        ParkourController.HandleSpaceInput()
+    end
 
 end)
 

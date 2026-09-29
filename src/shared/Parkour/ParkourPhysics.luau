@@ -1,6 +1,3 @@
-local RepStorage = game:GetService("ReplicatedStorage")
-local ParkourConfig = require(RepStorage.Shared.Parkour.ParkourConfig)
-
 local ParkourPhysics = {}
 
 -- DEBUG TOOLS --

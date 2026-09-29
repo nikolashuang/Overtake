@@ -108,8 +108,6 @@ function CharacterClass:CanVault()
 end
 
 function CharacterClass:VaultOrHurdle()
-    if not self:CanVault() then return end
-
     local root = self.RootPart
     local hum = self.Humanoid
 
@@ -164,23 +162,21 @@ end
 
 ---------------------------------------------------------------------------------------------------
 
---POWER JUMP--
+--BOOSTING--
 
 function CharacterClass:CanLunge()
     if self.MomentumUnit < 25 then return end
     if self.Staggered then return end
-    if time() - self.LastLunge < BoostConfig.POWER_JUMP_CD then return end
+    if time() - self.LastLunge < BoostConfig.LUNGE_CD then return end
     if not self:IsGrounded() then return end
 
     return true
 end
 
 function CharacterClass:Lunge()
-    if not self:CanLunge() then return end
-
     local root = self.RootPart
 
-    self.Humanoid.JumpHeight = BoostConfig.POWER_JUMP_HEIGHT
+    self.Humanoid.JumpHeight = BoostConfig.LUNGE_HEIGHT
     self.LastLunge = time()
 
     local lv = Instance.new("LinearVelocity")
@@ -195,22 +191,49 @@ function CharacterClass:Lunge()
 
     lv.VectorVelocity = flatLook * forwardSpeed
 
-    ConsumeMomentum(self, BoostConfig.POWER_JUMP_CONSUMPTION)
+    ConsumeMomentum(self, BoostConfig.LUNGE_CONSUMPTION)
     self.AnimationController.PlayAnimation("MovementAnims", "LungeAnim")
 
 end
 
----------------------------------------------------------------------------------------------------
-
-function CharacterClass:Slide()
+function CharacterClass:CanLedgeBoost()
 
 end
 
 function CharacterClass:LedgeBoost()
 
 end
+---------------------------------------------------------------------------------------------------
+
+--SLIDING--
+
+function CharacterClass:CanSlide()
+
+end
+
+function CharacterClass:Slide()
+
+end
+
+---------------------------------------------------------------------------------------------------
+
+function CharacterClass:CanWallRun()
+
+
+end
 
 function CharacterClass:WallRun()
+
+end
+
+
+--RECOVERY--
+
+function CharacterClass:CanRecoveryRoll()
+
+end
+
+function CharacterClass:CanLedgeCatch()
 
 end
 
