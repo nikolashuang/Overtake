@@ -111,7 +111,7 @@ local slidePartsCollision = {
 }
 
 function CharacterClass:ChangeSlideCollision()
-    for _, part in pairs(self.Character:GetDescendants()) do
+    for _, part in pairs(self.Character:GetChildren()) do
         if part:IsA("BasePart") and part ~= self.SlideCollider and slidePartsCollision[part.Name] then
             part.CanCollide = not self.isSliding
         end
