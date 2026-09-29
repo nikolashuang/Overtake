@@ -22,6 +22,7 @@ function CharacterClass.new(player, system)
     self.Character = nil
     self.Humanoid = nil
     self.RootPart = nil
+    self.SlideCollider = nil
 
     self.MomentumUnit = 0
     self.RisingMomentum = 5
@@ -58,6 +59,18 @@ function CharacterClass:BindCharacter(character)
     self.MovementAttachment.Name = "MovementAttachment"
     self.MovementAttachment.Parent = self.RootPart
 
+    self.SlideCollider = Instance.new("Part")
+    self.SlideCollider.Name = "SlideCollider"
+    self.SlideCollider.Parent = self.RootPart
+    self.SlideCollider.Transparency = 0.5
+    self.SlideCollider.CanCollide = false
+    self.SlideCollider.Massless = true
+    self.SlideColliderCollider.Size = Vector3.new(3.75, 2, 2.5)
+
+    local WeldConstraint = Instance.new("WeldConstraint")
+    WeldConstraint.Part0 = self.RootPart
+    WeldConstraint.Part1 = self.SlideCollider
+
 end
 
 function CharacterClass:UpdateMomentum(deltaTime)
@@ -88,6 +101,23 @@ end
 
 function CharacterClass:ConsumeMomentum(value, deltaTime)
     self.MomentumUnit = math.max(MomentumConfig.MIN_MOMENTUM, self.MomentumUnit - value * (deltaTime or 1))
+end
+
+local slidePartsCollision = {
+    UpperRightLeg = true,
+    UpperLeftLeg = true,
+    LowerRightLeg = true,
+    LowerLeftLeg = true
+}
+
+function CharacterClass:ChangeSlideCollision()
+    for _, part in pairs(self.Character:GetDescendants()) do
+        if part:IsA("BasePart") and part ~= self.SlideCollider and slidePartsCollision[part.Name] then
+            part.CanCollide = not self.isSliding
+        end
+    end
+
+    self.SlideCollider.CanCollide = self.isSliding
 end
 
 --VAULTING--
@@ -233,6 +263,8 @@ function CharacterClass:Slide()
     self.Humanoid.AutoRotate = false
     self.SlideDirection = self.Humanoid.MoveDirection.Unit
 
+    self:ChangeSlideCollision()
+
     self.AnimationController.PlayAnimation("ParkourAnims", "SlideAnim")
 end
 
@@ -241,6 +273,7 @@ function CharacterClass:EndSlide()
     self.Humanoid.AutoRotate = true
     self.SlideDirection = nil
 
+    self:ChangeSlideCollision()
 
     self.AnimationController.StopAnimation("ParkourAnims", "SlideAnim")
 end
