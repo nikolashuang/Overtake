@@ -77,9 +77,19 @@ Exact timing and exploit-resistant implementation are undecided.
 - A defensive catch costs almost all Momentum.
 - Catching a ledge during a jump can transition into an upward vault and can grant a small amount of Momentum.
 
-## Power Jumping
+## Lunge
 Current design name: **Power Jumping**.
 Current implementation name in code: **Lunge**.
+
+## Trip
+- If the player runs into an obstacle without vaulting or attempting to jump over it, they trip on the obstacle.
+- The player loses some Momentum.
+- Exact Momentum loss is undecided.
+
+## Wall Crash
+- If the player runs into a wall without sliding, climbing, or otherwise avoiding it, they crash into the wall.
+- The player loses more Momentum than they would from a Trip.
+- Exact Momentum loss is undecided.
 
 Input direction:
 - Tap Middle Mouse Button, then Space shortly afterward.
@@ -164,7 +174,7 @@ Normal players can equip up to **two** attributes.
 - Reduces Momentum penalties associated with Ledge Catching.
 - Improves Recovery Roll protection against Momentum loss.
 
-## Overdrive
+## Max Adrenaline
 Activation:
 - Available at Max Momentum.
 - Player consumes 100% of normal Momentum for temporary additive benefits.

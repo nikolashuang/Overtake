@@ -14,7 +14,7 @@ local ParkourConfig = {
         MAX_MOMENTUM = 100,
         MIN_MOMENTUM = 0,
         MAX_RISING_MOMENTUM = 25,
-        STARTUP_MOMENTUM = 20,
+        STARTUP_MOMENTUM = 15,
         SLIDING_CONSUMPTION_DECAY = 50,
         MIN_SLIDING_MOMENTUM = 65
     },

@@ -1,4 +1,5 @@
 local RepStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 local Debris = game:GetService("Debris")
 
 local ParkourPhysics = require(RepStorage.Shared.Parkour.ParkourPhysics)
@@ -59,19 +60,27 @@ function CharacterClass:BindCharacter(character)
     self.MovementAttachment = Instance.new("Attachment")
     self.MovementAttachment.Name = "MovementAttachment"
     self.MovementAttachment.Parent = self.RootPart
+    
+    if RunService:IsServer() then
 
-    self.SlideCollider = Instance.new("Part")
-    self.SlideCollider.Name = "SlideCollider"
-    self.SlideCollider.Parent = self.RootPart
-    self.SlideCollider.Transparency = 0.5
-    self.SlideCollider.CanCollide = false
-    self.SlideCollider.Massless = true
-    self.SlideColliderCollider.Size = Vector3.new(3.75, 2, 2.5)
+        self.SlideCollider = Instance.new("Part")
 
-    local WeldConstraint = Instance.new("WeldConstraint")
-    WeldConstraint.Part0 = self.RootPart
-    WeldConstraint.Part1 = self.SlideCollider
+        local WeldConstraint = Instance.new("WeldConstraint")
+        WeldConstraint.Part0 = self.RootPart
+        WeldConstraint.Part1 = self.SlideCollider
+        WeldConstraint.Parent = self.RootPart
 
+        self.SlideCollider.Name = "SlideCollider"
+        self.SlideCollider.Parent = self.Character
+        self.SlideCollider.Transparency = 0.5
+        self.SlideCollider.CanCollide = false
+        self.SlideCollider.Massless = true
+        self.SlideCollider.Position = self.RootPart.Position + Vector3.new(0, -2, 0)
+        self.SlideCollider.Size = Vector3.new(3.75, 2, 2.5)
+
+    else
+        self.SlideCollider = self.Character:WaitForChild("SlideCollider")
+    end
 end
 
 function CharacterClass:UpdateMomentum(deltaTime)
@@ -103,15 +112,15 @@ function CharacterClass:ConsumeMomentum(value, deltaTime)
 end
 
 local slidePartsCollision = {
-    UpperRightLeg = true,
-    UpperLeftLeg = true,
-    LowerRightLeg = true,
-    LowerLeftLeg = true
+    UpperRightLeg = false,
+    UpperLeftLeg = false,
+    LowerRightLeg = false,
+    LowerLeftLeg = false
 }
 
 function CharacterClass:ChangeSlideCollision()
     for _, part in pairs(self.Character:GetChildren()) do
-        if part:IsA("BasePart") and part ~= self.SlideCollider and slidePartsCollision[part.Name] then
+        if part:IsA("Part") and part ~= self.SlideCollider and not slidePartsCollision[part.Name] then
             part.CanCollide = not self.isSliding
         end
     end
