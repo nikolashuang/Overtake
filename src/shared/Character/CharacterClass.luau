@@ -213,7 +213,6 @@ function CharacterClass:CanLunge()
     if time() - self.LastLunge < BoostConfig.LUNGE_CD then return end
     if self.Humanoid:GetState() == Enum.HumanoidStateType.Freefall then return end
 
-    print(true)
     return true
 end
 
@@ -316,6 +315,8 @@ end
 function CharacterClass:CanLedgeCatch()
 
 end
+
+
 
 
 return CharacterClass
