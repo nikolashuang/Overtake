@@ -2,7 +2,7 @@ local ParkourPhysics = {}
 
 -- DEBUG TOOLS --
 
-local debugMode = true
+ParkourPhysics.debugMode = true
 
 local debugBeams = {
     debugWaistBeam = nil,
@@ -80,13 +80,13 @@ function ParkourPhysics.DetectObstacle(character, vaultDistance)
 	local stableRootPosition = root.CFrame:PointToWorldSpace(stableRootOffset)
     local stableKneePosition = root.CFrame:PointToWorldSpace(stableKneeOffset)
 
-    print(debugMode)
+    print(ParkourPhysics.debugMode)
 
-    if debugMode and not debugBeams.debugWaistBeam and not debugBeams.debugHeadBeam and not debugBeams.debugKneeBeam then
+    if ParkourPhysics.debugMode and not debugBeams.debugWaistBeam and not debugBeams.debugHeadBeam and not debugBeams.debugKneeBeam then
         debugBeams.debugWaistBeam = CreateRaycastBeam(root, stableRootOffset)
         debugBeams.debugHeadBeam = CreateRaycastBeam(root, stableHeadOffset)
         debugBeams.debugKneeBeam = CreateRaycastBeam(root, stableKneeOffset)
-    elseif not debugMode and debugBeams.debugWaistBeam and debugBeams.debugHeadBeam and debugBeams.debugKneeBeam then
+    elseif not ParkourPhysics.debugMode and debugBeams.debugWaistBeam and debugBeams.debugHeadBeam and debugBeams.debugKneeBeam then
         DestroyRaycastBeam(root)
     end
 
