@@ -130,7 +130,7 @@ function ParkourPhysics.DetectWallRuns(character, attachDistance)
     local root = character:FindFirstChild("HumanoidRootPart")
     local humanoid = character:FindFirstChild("Humanoid")
 
-    if not humanoid and root then return end
+    if not humanoid or not root then return end
 
     local WALL_ATTACH_DISTANCE = attachDistance
 
@@ -147,6 +147,26 @@ function ParkourPhysics.DetectWallRuns(character, attachDistance)
 	local stableRootPosition = root.CFrame:PointToWorldSpace(stableRootOffset)
     local stableKneePosition = root.CFrame:PointToWorldSpace(stableKneeOffset)
 
+    local localRightDirection = Vector3.new(4, 0, 0)
+    local localLeftDirection = Vector3.new(-4, 0, 0)
+
+    local rightWaistDetection = validateHit(workspace:Raycast(stableRootPosition, root.CFrame.RightVector * WALL_ATTACH_DISTANCE, params))
+    local rightKneeDetection = validateHit(workspace:Raycast(stableKneePosition, root.CFrame.RightVector * WALL_ATTACH_DISTANCE, params))
+
+    local leftWaistDetection = validateHit(workspace:Raycast(stableRootPosition, root.CFrame.RightVector * -WALL_ATTACH_DISTANCE, params))
+    local leftKneeDetection = validateHit(workspace:Raycast(stableKneePosition, root.CFrame.RightVector * -WALL_ATTACH_DISTANCE, params))
+    
+    local rightWall = rightKneeDetection and rightWaistDetection
+    local leftWall = leftKneeDetection and leftWaistDetection
+
+    if rightWall then
+        return "WallRun", "Right"
+    elseif leftWall then
+        return "WallRun", "Left"
+    end
+
+
+    return nil
 end
 
 return ParkourPhysics
