@@ -26,6 +26,11 @@ local ParkourConfig = {
         LUNGE_CD = 0.75,
         LUNGE_CONSUMPTION = 35
 
+    },
+
+    WallRun = {
+        MIN_WALLRUN_MOMENTUM = 50,
+        MAX_WALL_ATTACH_DISTANCE = 4
     }
 
 

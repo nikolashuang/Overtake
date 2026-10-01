@@ -8,6 +8,7 @@ local ParkourConfig = require(RepStorage.Shared.Parkour.ParkourConfig)
 local VaultConfig = ParkourConfig.Vault
 local MomentumConfig = ParkourConfig.Momentum
 local BoostConfig = ParkourConfig.Boost
+local WallRunConfig = ParkourConfig.WallRun
 
 local CharacterClass = {}
 
@@ -297,7 +298,12 @@ end
 ---------------------------------------------------------------------------------------------------
 
 function CharacterClass:CanWallRun()
+    if self.Staggered then return false end
+    if self.MomentumUnit < WallRunConfig.MIN_WALLRUN_MOMENTUM then return false end
+    if self.Huamnoid:GetState() ~= Enum.HumanoidStateType.FreeFall then return false end
 
+
+    return true
 
 end
 
