@@ -4,11 +4,12 @@ local StarterPlr = game:GetService("StarterPlayer")
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 
---local ParkourPhysics = require(RepStorage.Shared.Parkour.ParkourPhysics)
+local ParkourPhysics = require(RepStorage.Shared.Parkour.ParkourPhysics)
 local ParkourController = require(script.Parent.Controllers.ParkourController)
 local ClientCharacter = require(RepStorage.Shared.Character.CharacterClass)
 local AnimationController = require(StarterPlr.StarterPlayerScripts.Controllers.AnimationController)
 local ParkourConfig = require(RepStorage.Shared.Parkour.ParkourConfig)
+local UIController = require(script.Parent.Controllers.UIController)
 
 local MomentumConfig = ParkourConfig.Momentum
 
@@ -20,7 +21,16 @@ AnimationController.LoadAllTracks()
 
 local characterObject = ClientCharacter.new(player, {AnimationController = AnimationController})
 characterObject:BindCharacter(character)
+
 ParkourController.Init(characterObject)
+UIController.Init({
+    DebugUI = {
+        ParkourPhysics = ParkourPhysics
+    }
+})
+
+local debugUI = UIController.debugButton
+
 
 local function isKeyDown(key)
     return UserInput:IsKeyDown(Enum.KeyCode[key])
@@ -104,4 +114,10 @@ RunService:BindToRenderStep("LockSlideDirection", Enum.RenderPriority.Character.
         characterObject.Humanoid:Move(characterObject.SlideDirection, false)
     end
 end)
+
+debugUI.Activated:Connect(function()
+    ParkourPhysics.debugMode = not ParkourPhysics.debugMode
+    UIController.ChangeDebugModeUI(ParkourPhysics.debugMode)
+end)
+
 

@@ -104,7 +104,7 @@ function CharacterClass:UpdateMomentum(deltaTime)
         end
     end
 
-    print(self.MomentumUnit)
+    --print(self.MomentumUnit)
     self.Humanoid.WalkSpeed += (self.MomentumUnit * 0.25)
 end
 

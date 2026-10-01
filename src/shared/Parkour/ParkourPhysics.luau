@@ -36,10 +36,13 @@ local function CreateRaycastBeam(parentPart, startPosition)
     return endAttachment
 end
 
-function ParkourPhysics.ChangeDebugMode()
-    debugMode = not debugMode
+local function DestroyRaycastBeam(rootPart)
+    for _, child in pairs(rootPart:GetChildren()) do
+        if child == "Beam" then
+            child:Destory()
+        end
+    end
 end
-
 -----------------------------------------
 
 local function validateHit(result)
@@ -77,10 +80,14 @@ function ParkourPhysics.DetectObstacle(character, vaultDistance)
 	local stableRootPosition = root.CFrame:PointToWorldSpace(stableRootOffset)
     local stableKneePosition = root.CFrame:PointToWorldSpace(stableKneeOffset)
 
-    if not debugBeams.debugWaistBeam and not debugBeams.debugHeadBeam and not debugBeams.debugKneeBeam and DEBUG_MODE then
+    print(debugMode)
+
+    if debugMode and not debugBeams.debugWaistBeam and not debugBeams.debugHeadBeam and not debugBeams.debugKneeBeam then
         debugBeams.debugWaistBeam = CreateRaycastBeam(root, stableRootOffset)
         debugBeams.debugHeadBeam = CreateRaycastBeam(root, stableHeadOffset)
         debugBeams.debugKneeBeam = CreateRaycastBeam(root, stableKneeOffset)
+    elseif not debugMode and debugBeams.debugWaistBeam and debugBeams.debugHeadBeam and debugBeams.debugKneeBeam then
+        DestroyRaycastBeam(root)
     end
 
     local localMoveDirection = Vector3.new(0, 0, -VAULT_DISTANCE)
