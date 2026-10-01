@@ -19,14 +19,17 @@ local debugBeams = {
 
 local function CreateRaycastBeam(parentPart, startPosition)
     local startAttachment = Instance.new("Attachment")
+    startAttachment.Name = "DebugAttachment"
     startAttachment.Position = startPosition or Vector3.zero
     startAttachment.Parent = parentPart
 
     local endAttachment = Instance.new("Attachment")
+    endAttachment.Name = "DebugAttachment"
     endAttachment.Position = startPosition or Vector3.zero
     endAttachment.Parent = parentPart
 
     local beam = Instance.new("Beam")
+    beam.Name = "DebugBeam"
     beam.Attachment0 = startAttachment
     beam.Attachment1 = endAttachment
     beam.Width0 = 0.08
@@ -36,11 +39,20 @@ local function CreateRaycastBeam(parentPart, startPosition)
     return endAttachment
 end
 
-local function DestroyRaycastBeam(rootPart)
+function ParkourPhysics.DestroyRaycastBeams(character)
+    if not character then return end
+
+    local rootPart = character:FindFirstChild("HumanoidRootPart")
+    if not rootPart then return end
+
     for _, child in pairs(rootPart:GetChildren()) do
-        if child == "Beam" then
-            child:Destory()
+        if child.Name == "DebugBeam" or child.Name == "DebugAttachment" then
+            child:Destroy()
         end
+    end
+
+    for i in pairs(debugBeams) do
+        debugBeams[i] = nil
     end
 end
 -----------------------------------------
@@ -86,15 +98,15 @@ function ParkourPhysics.DetectObstacle(character, vaultDistance)
         debugBeams.debugWaistBeam = CreateRaycastBeam(root, stableRootOffset)
         debugBeams.debugHeadBeam = CreateRaycastBeam(root, stableHeadOffset)
         debugBeams.debugKneeBeam = CreateRaycastBeam(root, stableKneeOffset)
-    elseif not ParkourPhysics.debugMode and debugBeams.debugWaistBeam and debugBeams.debugHeadBeam and debugBeams.debugKneeBeam then
-        DestroyRaycastBeam(root)
     end
 
     local localMoveDirection = Vector3.new(0, 0, -VAULT_DISTANCE)
 
-    debugBeams.debugWaistBeam.Position = localMoveDirection + stableRootOffset
-    debugBeams.debugHeadBeam.Position = localMoveDirection + stableHeadOffset
-    debugBeams.debugKneeBeam.Position = localMoveDirection + stableKneeOffset
+    if debugBeams.debugHeadBeam and debugBeams.debugWaistBeam and debugBeams.debugKneeBeam then
+        debugBeams.debugWaistBeam.Position = localMoveDirection + stableRootOffset
+        debugBeams.debugHeadBeam.Position = localMoveDirection + stableHeadOffset
+        debugBeams.debugKneeBeam.Position = localMoveDirection + stableKneeOffset
+    end
 
 
     local waistDetection = validateHit(workspace:Raycast(stableRootPosition, root.CFrame.LookVector * VAULT_DISTANCE, params))

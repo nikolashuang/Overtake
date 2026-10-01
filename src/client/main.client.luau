@@ -118,6 +118,9 @@ end)
 debugUI.Activated:Connect(function()
     ParkourPhysics.debugMode = not ParkourPhysics.debugMode
     UIController.ChangeDebugModeUI(ParkourPhysics.debugMode)
+    if ParkourPhysics.debugMode == false then
+        ParkourPhysics.DestroyRaycastBeams(character)
+    end
 end)
 
 
