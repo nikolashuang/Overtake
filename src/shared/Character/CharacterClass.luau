@@ -46,6 +46,7 @@ function CharacterClass.new(player, system)
     self.ableWallRun = false
     self.WallObject = nil
     self.WallDirection = nil
+    self.isWallRunning = false
 
     self.LastLunge = 0
     self.LastVault = 0
@@ -304,6 +305,7 @@ end
 function CharacterClass:SlideDecay(deltaTime)
     self:ConsumeMomentum(MomentumConfig.SLIDING_CONSUMPTION_DECAY, deltaTime)
 end
+
 ---------------------------------------------------------------------------------------------------
 
 function CharacterClass:UpdateWallRunObj()
@@ -330,6 +332,7 @@ function CharacterClass:CanWallRun()
 end
 
 function CharacterClass:WallRun()
+
 
 end
 

@@ -42,6 +42,7 @@ function AnimationController.LoadAllTracks()
 
 end
 
+--HELPER ANIMATION FUNCTIONS--
 
 function AnimationController.PlayAnimation(storage, anim)
     if not storage or not anim then return end
@@ -81,6 +82,11 @@ function AnimationController.AdjustAnimationSpeed(storage, anim, speed)
 
     animationTrack:AdjustSpeed(trackSpeed)
 end
+
+---------------------------------------------------------------------------------------------------
+
+
+--ANIMATION MISCELLANEOUS--
 
 function AnimationController.UpdateMovementAnimation(characterObject)
     local characterState = characterObject.Humanoid:GetState()

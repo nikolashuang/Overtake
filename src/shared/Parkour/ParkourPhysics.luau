@@ -41,22 +41,6 @@ local function CreateRaycastBeam(parentPart, startPosition)
     return endAttachment
 end
 
-local function HasVaultdebugWallRunBeams()
-    for _, beam in pairs(debugVaultBeams) do
-        if not beam then return false end
-    end
-
-    return true
-end
-
-local function HasWallRunDebugBeams()
-    for _, beam in pairs(debugWallRunBeams) do
-        if not beam then return false end
-    end
-
-    return true
-end
-
 function ParkourPhysics.DestroyRaycastBeams(character)
     if not character then return end
 
@@ -124,7 +108,7 @@ function ParkourPhysics.DetectObstacle(character, vaultDistance)
 
     local localMoveDirection = Vector3.new(0, 0, -VAULT_DISTANCE)
 
-    if HasVaultdebugWallRunBeams() then
+    if next(debugVaultBeams) ~= nil then
         debugVaultBeams.debugWaistBeam.Position = localMoveDirection + stableRootOffset
         debugVaultBeams.debugHeadBeam.Position = localMoveDirection + stableHeadOffset
         debugVaultBeams.debugKneeBeam.Position = localMoveDirection + stableKneeOffset
@@ -162,7 +146,7 @@ function ParkourPhysics.DetectWallRuns(character, attachDistance)
     params.FilterType = Enum.RaycastFilterType.Exclude
     params.FilterDescendantsInstances = {character}
 
-	local stableRootOffset = Vector3.new(0, -0.6, 0)
+	local stableRootOffset = Vector3.new(0, 0.6, 0)
     local stableKneeOffset = Vector3.new(0, -2, 0)
 	local stableRootPosition = root.CFrame:PointToWorldSpace(stableRootOffset)
     local stableKneePosition = root.CFrame:PointToWorldSpace(stableKneeOffset)
@@ -177,7 +161,7 @@ function ParkourPhysics.DetectWallRuns(character, attachDistance)
     local localRightDirection = Vector3.new(4, 0, 0)
     local localLeftDirection = Vector3.new(-4, 0, 0)
 
-    if HasWallRunDebugBeams() then
+    if next(debugWallRunBeams) ~= nil then
         debugWallRunBeams.debugWaistRightBeam.Position = localRightDirection + stableRootOffset
         debugWallRunBeams.debugWaistLeftBeam.Position = localLeftDirection + stableRootOffset
         debugWallRunBeams.debugKneeRightBeam.Position = localRightDirection + stableKneeOffset
@@ -194,9 +178,9 @@ function ParkourPhysics.DetectWallRuns(character, attachDistance)
     local leftWall = leftKneeDetection and leftWaistDetection and leftKneeDetection.Instance == leftWaistDetection.Instance
 
     if rightWall then
-        return rightWaistDetection.Instance, "Right"
+        return rightWaistDetection, "Right"
     elseif leftWall then
-        return leftWaistDetection.Instance, "Left"
+        return leftWaistDetection, "Left"
     end
 
 
