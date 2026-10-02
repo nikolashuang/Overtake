@@ -8,10 +8,9 @@ local ParkourPhysics = require(RepStorage.Shared.Parkour.ParkourPhysics)
 local ParkourController = require(script.Parent.Controllers.ParkourController)
 local ClientCharacter = require(RepStorage.Shared.Character.CharacterClass)
 local AnimationController = require(StarterPlr.StarterPlayerScripts.Controllers.AnimationController)
-local ParkourConfig = require(RepStorage.Shared.Parkour.ParkourConfig)
 local UIController = require(script.Parent.Controllers.UIController)
 
-local MomentumConfig = ParkourConfig.Momentum
+
 
 local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
@@ -56,46 +55,8 @@ end)
 
 RunService.PreRender:Connect(function()
     characterObject:UpdateVaultObject()
-
-    local characterState = characterObject.Humanoid:GetState()
-
-    if characterObject.Humanoid.MoveDirection.Magnitude <= 0 or characterState == Enum.HumanoidStateType.Jumping or characterState == Enum.HumanoidStateType.Freefall or characterObject.isSliding then
-        AnimationController.StopAnimation("MovementAnims", "StartupAnim")
-        AnimationController.StopAnimation("MovementAnims", "FullSprintAnim")
-        AnimationController.StopAnimation("MovementAnims", "SprintAnim")
-        characterObject.currentMovementAnim = nil
-        return
-    end
-
-    local newAnim = nil
-
-    if characterObject.MomentumUnit < MomentumConfig.STARTUP_MOMENTUM then
-        newAnim = "StartupAnim"
-    else
-        newAnim = "SprintAnim"
-    end
-
-    if characterObject.currentMovementAnim == newAnim then 
-        local adjustment
-        if characterObject.currentMovementAnim == "StartupAnim" then
-            adjustment = MomentumConfig.STARTUP_MOMENTUM / 2
-            AnimationController.AdjustAnimationSpeed("MovementAnims", characterObject.currentMovementAnim, math.min((characterObject.MomentumUnit / adjustment) * 2, 1))
-        elseif characterObject.currentMovementAnim == "SprintAnim" then
-            adjustment = MomentumConfig.MAX_MOMENTUM / 2
-            AnimationController.AdjustAnimationSpeed("MovementAnims", characterObject.currentMovementAnim, math.max((characterObject.MomentumUnit / adjustment), 0.85))
-        else
-            return
-        end
-
-        return
-    end
-
-    if characterObject.currentMovementAnim then
-        AnimationController.StopAnimation("MovementAnims", characterObject.currentMovementAnim)
-    end
-
-    AnimationController.PlayAnimation("MovementAnims", newAnim)
-    characterObject.currentMovementAnim = newAnim
+    characterObject:UpdateWallRunObj()
+    AnimationController.UpdateMovementAnimation(characterObject)
 end)
 
 RunService.PostSimulation:Connect(function(deltaTime)
@@ -120,6 +81,9 @@ debugUI.Activated:Connect(function()
     UIController.ChangeDebugModeUI(ParkourPhysics.debugMode)
     if ParkourPhysics.debugMode == false then
         ParkourPhysics.DestroyRaycastBeams(character)
+        characterObject.SlideCollider.Transparency = 1
+    else
+        characterObject.SlideCollider.Transparency = 0.5
     end
 end)
 

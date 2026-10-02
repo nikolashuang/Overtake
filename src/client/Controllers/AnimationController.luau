@@ -1,5 +1,7 @@
 local RepStorage = game:GetService("ReplicatedStorage")
+local ParkourConfig = require(RepStorage.Shared.Parkour.ParkourConfig)
 local AnimationFolder = RepStorage.Animations
+local MomentumConfig = ParkourConfig.Momentum
 
 local AnimationStorage = {
     MovementAnims = {
@@ -78,6 +80,49 @@ function AnimationController.AdjustAnimationSpeed(storage, anim, speed)
     local trackSpeed = math.min(1.5, speed)
 
     animationTrack:AdjustSpeed(trackSpeed)
+end
+
+function AnimationController.UpdateMovementAnimation(characterObject)
+    local characterState = characterObject.Humanoid:GetState()
+
+    if characterObject.Humanoid.MoveDirection.Magnitude <= 0 or characterState == Enum.HumanoidStateType.Jumping or characterState == Enum.HumanoidStateType.Freefall or characterObject.isSliding then
+        AnimationController.StopAnimation("MovementAnims", "StartupAnim")
+        AnimationController.StopAnimation("MovementAnims", "FullSprintAnim")
+        AnimationController.StopAnimation("MovementAnims", "SprintAnim")
+        characterObject.currentMovementAnim = nil
+        return
+    end
+
+    local newAnim = nil
+
+    if characterObject.MomentumUnit < MomentumConfig.STARTUP_MOMENTUM then
+        newAnim = "StartupAnim"
+    else
+        newAnim = "SprintAnim"
+    end
+
+    if characterObject.currentMovementAnim == newAnim then 
+        local adjustment
+        if characterObject.currentMovementAnim == "StartupAnim" then
+            adjustment = MomentumConfig.STARTUP_MOMENTUM / 2
+            AnimationController.AdjustAnimationSpeed("MovementAnims", characterObject.currentMovementAnim, math.min((characterObject.MomentumUnit / adjustment) * 2, 1))
+        elseif characterObject.currentMovementAnim == "SprintAnim" then
+            adjustment = MomentumConfig.MAX_MOMENTUM / 2
+            AnimationController.AdjustAnimationSpeed("MovementAnims", characterObject.currentMovementAnim, math.max((characterObject.MomentumUnit / adjustment), 0.85))
+        else
+            return
+        end
+
+        return
+    end
+
+    if characterObject.currentMovementAnim then
+        AnimationController.StopAnimation("MovementAnims", characterObject.currentMovementAnim)
+    end
+
+    AnimationController.PlayAnimation("MovementAnims", newAnim)
+    characterObject.currentMovementAnim = newAnim
+
 end
 
 

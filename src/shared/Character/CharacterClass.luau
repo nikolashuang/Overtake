@@ -45,8 +45,11 @@ function CharacterClass.new(player, system)
 
     self.ableWallRun = false
     self.WallObject = nil
+    self.WallDirection = nil
 
     self.LastLunge = 0
+    self.LastVault = 0
+    self.LastWallRun = 0
 
     self.currentMovementAnim = nil
 
@@ -149,6 +152,7 @@ end
 function CharacterClass:CanVault()
     if not self.ableVault then return false end
     if self.Staggered then return false end
+    if time() - self.LastVault < VaultConfig.VAULT_CD then return false end
     
     return true
 end
@@ -158,6 +162,7 @@ function CharacterClass:VaultOrHurdle()
     local hum = self.Humanoid
 
     hum.Jump = false
+    self.LastVault = time()
 
     local align = Instance.new("AlignOrientation")
     align.Attachment0 = self.MovementAttachment
@@ -181,7 +186,7 @@ function CharacterClass:VaultOrHurdle()
             lv.VectorVelocity = flatLook * (forwardSpeed + 15) + Vector3.new(0, 3, 0)
             self.AnimationController.PlayAnimation("ParkourAnims", "VaultVariant1")
         else
-            lv.VectorVelocity = flatLook * (forwardSpeed + 15) + Vector3.new(0, 9, 0)
+            lv.VectorVelocity = flatLook * (forwardSpeed + 15) + Vector3.new(0, 12, 0)
             self.AnimationController.PlayAnimation("ParkourAnims", "VaultVariant1")
             self:ConsumeMomentum(VaultConfig.TALL_VAULT_CONSUMPTION)
             self.HaltMomentum = true
@@ -302,9 +307,12 @@ end
 ---------------------------------------------------------------------------------------------------
 
 function CharacterClass:UpdateWallRunObj()
-    local wallobj, traversalType, direction = ParkourPhysics.DetectWallRuns()
+    local wallDetectionDistance = WallRunConfig.MAX_WALL_ATTACH_DISTANCE
+    local wallobj, direction = ParkourPhysics.DetectWallRuns(self.Character, wallDetectionDistance)
 
     self.WallObject = wallobj
+    self.WallDirection = direction
+
 end
 
 
@@ -314,6 +322,7 @@ function CharacterClass:CanWallRun()
     if self.Staggered then return false end
     if not self.ableWallRun then return false end
     if self.MomentumUnit < WallRunConfig.MIN_WALLRUN_MOMENTUM then return false end
+    if time() - self.LastWallRun < WallRunConfig.WALL_RUN_CD then return false end
     if state ~= Enum.HumanoidStateType.Freefall and state ~= Enum.HumanoidStateType.Jumping then return false end
 
 

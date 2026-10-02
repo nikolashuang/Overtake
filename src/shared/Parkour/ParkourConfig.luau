@@ -7,6 +7,7 @@ local ParkourConfig = {
         MIN_VAULT_SPEED = 25,
         VAULT_DURATION = 0.3,
         TALL_VAULT_CONSUMPTION = 7.5,
+        VAULT_CD = 0.75
     },
 
     Momentum = {
@@ -25,12 +26,12 @@ local ParkourConfig = {
         LUNGE_POWER = 30,
         LUNGE_CD = 0.75,
         LUNGE_CONSUMPTION = 35
-
     },
 
     WallRun = {
         MIN_WALLRUN_MOMENTUM = 50,
-        MAX_WALL_ATTACH_DISTANCE = 4
+        MAX_WALL_ATTACH_DISTANCE = 4,
+        WALL_RUN_CD = 0.5
     }
 
 
