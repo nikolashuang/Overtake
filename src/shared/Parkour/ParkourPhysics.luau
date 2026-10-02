@@ -140,10 +140,8 @@ function ParkourPhysics.DetectWallRuns(character, attachDistance)
     params.FilterType = Enum.RaycastFilterType.Exclude
     params.FilterDescendantsInstances = {character}
 
-    local stableHeadOffset = Vector3.new(0, 1.8, 0)
 	local stableRootOffset = Vector3.new(0, -0.6, 0)
     local stableKneeOffset = Vector3.new(0, -2, 0)
-    local stableHeadPosition = root.CFrame:PointToWorldSpace(stableHeadOffset)
 	local stableRootPosition = root.CFrame:PointToWorldSpace(stableRootOffset)
     local stableKneePosition = root.CFrame:PointToWorldSpace(stableKneeOffset)
 
@@ -156,13 +154,13 @@ function ParkourPhysics.DetectWallRuns(character, attachDistance)
     local leftWaistDetection = validateHit(workspace:Raycast(stableRootPosition, root.CFrame.RightVector * -WALL_ATTACH_DISTANCE, params))
     local leftKneeDetection = validateHit(workspace:Raycast(stableKneePosition, root.CFrame.RightVector * -WALL_ATTACH_DISTANCE, params))
     
-    local rightWall = rightKneeDetection and rightWaistDetection
-    local leftWall = leftKneeDetection and leftWaistDetection
+    local rightWall = rightKneeDetection and rightWaistDetection and rightKneeDetection.Instance == rightWaistDetection.Instance
+    local leftWall = leftKneeDetection and leftWaistDetection and leftKneeDetection.Instance == leftWaistDetection.Instance
 
     if rightWall then
-        return "WallRun", "Right"
+        return rightWaistDetection.Instance, "WallRun", "Right"
     elseif leftWall then
-        return "WallRun", "Left"
+        return leftWaistDetection.Instance, "WallRun", "Left"
     end
 
 

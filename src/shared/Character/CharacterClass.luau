@@ -35,12 +35,16 @@ function CharacterClass.new(player, system)
     self.Fatigue = false
     self.HaltMomentum = false
     self.Stationary = 0
+    self.traversalType = nil
+
 
     self.ableVault = false
     self.vaultObject = nil
-    self.traversalType = nil
     self.SlideDirection = nil
     self.isSliding = false
+
+    self.ableWallRun = false
+    self.WallObject = nil
 
     self.LastLunge = 0
 
@@ -297,14 +301,23 @@ function CharacterClass:SlideDecay(deltaTime)
 end
 ---------------------------------------------------------------------------------------------------
 
+function CharacterClass:UpdateWallRunObj()
+    local wallobj, traversalType, direction = ParkourPhysics.DetectWallRuns()
+
+    self.WallObject = wallobj
+end
+
+
 function CharacterClass:CanWallRun()
+    local state = self.Humanoid:GetState()
+
     if self.Staggered then return false end
+    if not self.ableWallRun then return false end
     if self.MomentumUnit < WallRunConfig.MIN_WALLRUN_MOMENTUM then return false end
-    if self.Huamnoid:GetState() ~= Enum.HumanoidStateType.FreeFall then return false end
+    if state ~= Enum.HumanoidStateType.Freefall and state ~= Enum.HumanoidStateType.Jumping then return false end
 
 
     return true
-
 end
 
 function CharacterClass:WallRun()
