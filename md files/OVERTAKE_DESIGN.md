@@ -44,14 +44,18 @@ Momentum is the central movement resource. Movement techniques can preserve, con
 
 Exact timing and exploit-resistant implementation are undecided.
 
-## Wall Runs
+## Wall Run
 - Allows traversal along walls when there is not perfect footing below.
-- The path should slope slightly downward as the run expires.
-- Wall running consumes Momentum.
+- Gain a small upward boost when the Wall Run begins.
+- The player gets a free 1.5-second Wall Run window.
+- After the free window expires, the player enters **Wall Drift**.
+
+### Wall Drift (Only active after Wall Run)
+- The player begins sliding downward along the wall.
+- Consumes Momentum at 33 per second while active.
 
 ## Edge Boosting
-- Correct technique lets the player boost strongly off an edge.
-- Intended to increase Momentum.
+- If the player uses **Lunge** while on the edge of an object, greatly increase the power output.
 - **Status: under review.**
 
 ## Sliding

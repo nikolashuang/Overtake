@@ -58,6 +58,10 @@ function CharacterClass.new(player, system)
     return self
 end
 
+local function isGrounded(self)
+    return self.Humanoid.FloorMaterial ~= Enum.Material.Air
+end
+
 
 function CharacterClass:BindCharacter(character)
     self.Character = character
@@ -170,10 +174,10 @@ function CharacterClass:VaultOrHurdle()
     align.Mode = Enum.OrientationAlignmentMode.OneAttachment
     align.RigidityEnabled = true
 
-    local lv = Instance.new("LinearVelocity")
-    lv.Attachment0 = self.MovementAttachment
-    lv.RelativeTo = Enum.ActuatorRelativeTo.World
-    lv.ForceLimitsEnabled = false
+    local LinVel = Instance.new("LinearVelocity")
+    LinVel.Attachment0 = self.MovementAttachment
+    LinVel.RelativeTo = Enum.ActuatorRelativeTo.World
+    LinVel.ForceLimitsEnabled = false
 
     local currentVelocity = root.AssemblyLinearVelocity
     local look = root.CFrame.LookVector
@@ -184,10 +188,10 @@ function CharacterClass:VaultOrHurdle()
 
     if self.traversalType == "Vault" then
         if obstalceHeight < VaultConfig.MAX_VAULT_HEIGHT then
-            lv.VectorVelocity = flatLook * (forwardSpeed + 15) + Vector3.new(0, 3, 0)
+            LinVel.VectorVelocity = flatLook * (forwardSpeed + 15) + Vector3.new(0, 3, 0)
             self.AnimationController.PlayAnimation("ParkourAnims", "VaultVariant1")
         else
-            lv.VectorVelocity = flatLook * (forwardSpeed + 15) + Vector3.new(0, 12, 0)
+            LinVel.VectorVelocity = flatLook * (forwardSpeed + 15) + Vector3.new(0, 12, 0)
             self.AnimationController.PlayAnimation("ParkourAnims", "VaultVariant1")
             self:ConsumeMomentum(VaultConfig.TALL_VAULT_CONSUMPTION)
             self.HaltMomentum = true
@@ -195,16 +199,16 @@ function CharacterClass:VaultOrHurdle()
         align.CFrame = CFrame.lookAt(Vector3.zero, flatLook)
         hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
     elseif self.traversalType == "Hurdle" then
-        lv.VectorVelocity = flatLook * forwardSpeed + Vector3.new(0, 1.5, 0)
+        LinVel.VectorVelocity = flatLook * forwardSpeed + Vector3.new(0, 1.5, 0)
         align.CFrame = CFrame.lookAt(Vector3.zero, flatLook)
         hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
         self.AnimationController.PlayAnimation("ParkourAnims", "HurdleAnim")
     end
 
-    lv.Parent = root
+    LinVel.Parent = root
     align.Parent = root
 
-    Debris:AddItem(lv, 0.2)
+    Debris:AddItem(LinVel, 0.2)
     Debris:AddItem(align, 0.2)
 
     task.delay(VaultConfig.VAULT_DURATION, function()
@@ -239,25 +243,25 @@ function CharacterClass:Lunge()
     align.Mode = Enum.OrientationAlignmentMode.OneAttachment
     align.RigidityEnabled = true
 
-    local lv = Instance.new("LinearVelocity")
-    lv.Attachment0 = self.MovementAttachment
-    lv.RelativeTo = Enum.ActuatorRelativeTo.World
-    lv.ForceLimitsEnabled = false
+    local LinVel = Instance.new("LinearVelocity")
+    LinVel.Attachment0 = self.MovementAttachment
+    LinVel.RelativeTo = Enum.ActuatorRelativeTo.World
+    LinVel.ForceLimitsEnabled = false
 
     local currentVelocity = root.AssemblyLinearVelocity
     local look = root.CFrame.LookVector
     local flatLook = Vector3.new(look.X, 0, look.Z).Unit
     local forwardSpeed = currentVelocity:Dot(flatLook)
 
-    lv.VectorVelocity = flatLook * (forwardSpeed + BoostConfig.LUNGE_POWER) + Vector3.new(0, BoostConfig.LUNGE_HEIGHT, 0)
+    LinVel.VectorVelocity = flatLook * (forwardSpeed + BoostConfig.LUNGE_POWER) + Vector3.new(0, BoostConfig.LUNGE_HEIGHT, 0)
     align.CFrame = CFrame.lookAt(Vector3.zero, flatLook)
     hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
 
     self:ConsumeMomentum(BoostConfig.LUNGE_CONSUMPTION)
     self.AnimationController.PlayAnimation("MovementAnims", "LungeAnim")
 
-    lv.Parent = root
-    Debris:AddItem(lv, 0.3)
+    LinVel.Parent = root
+    Debris:AddItem(LinVel, 0.3)
     Debris:AddItem(align, 0.3)
 
     task.delay(0.5, function()
@@ -275,7 +279,7 @@ function CharacterClass:CanSlide()
     if self.isSliding then return false end
     if self.MomentumUnit < MomentumConfig.MIN_SLIDING_MOMENTUM then return false end
     if self.Staggered then return false end
-    if self.Humanoid:GetState() == Enum.HumanoidStateType.Freefall then return false end
+    if not isGrounded(self) then return false end
 
     return true
 end
@@ -285,6 +289,7 @@ function CharacterClass:Slide()
     self.Humanoid.AutoRotate = false
     self.SlideDirection = self.Humanoid.MoveDirection.Unit
     self.HaltMomentum = true
+    self.RisingMomentum = 5
 
     self:ChangeSlideCollision()
 
@@ -319,20 +324,49 @@ end
 
 
 function CharacterClass:CanWallRun()
-    local state = self.Humanoid:GetState()
-
     if self.Staggered then return false end
     if not self.ableWallRun then return false end
     if self.MomentumUnit < WallRunConfig.MIN_WALLRUN_MOMENTUM then return false end
     if time() - self.LastWallRun < WallRunConfig.WALL_RUN_CD then return false end
-    if state ~= Enum.HumanoidStateType.Freefall and state ~= Enum.HumanoidStateType.Jumping then return false end
+    if isGrounded(self) then return false end
 
 
     return true
 end
 
-function CharacterClass:WallRun()
+function CharacterClass:StartWallRun()
+    local root = self.RootPart
+    local humanoid = self.Humanoid
 
+    humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
+
+    self.isWallRunning = true
+
+    local align = Instance.new("AlignOrientation")
+    align.Attachment0 = self.MovementAttachment
+    align.Mode = Enum.OrientationAlignmentMode.OneAttachment
+    align.RigidityEnabled = true
+
+    local LinVel = Instance.new("LinearVelocity")
+    LinVel.Attachment0 = self.MovementAttachment
+    LinVel.RelativeTo = Enum.ActuatorRelativeTo.World
+    LinVel.ForceLimitsEnabled = false
+
+    local currentSpeed = root.AssemblyLinearVelocity
+    local look = root.CFrame.LookVector
+    local flatLook = Vector3.new(look.X, 0, look.Z).Unit
+    local forwardSpeed = currentSpeed:Dot(flatLook)
+
+    LinVel.VectorVelocity = flatLook * forwardSpeed + Vector3.new(0, WallRunConfig.INIT_WALLRUN_HEIGHT_BOOST, 0)
+    align.CFrame = CFrame.lookAt(Vector3.zero, flatLook)
+
+end
+
+function CharacterClass:UpdateWallCurves()
+
+end
+
+function CharacterClass:WallDrift()
 
 end
 

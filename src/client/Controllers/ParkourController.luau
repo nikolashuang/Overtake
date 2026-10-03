@@ -27,6 +27,11 @@ function ParkourController.HandleInput(input)
 end
 
 function ParkourController.HandleSpaceInput()
+    if characterObject:CanWallRun() then 
+        ParkourController.AttemptWallRun()
+        return
+    end
+
     if characterObject:CanLunge() and time() - mb3 < BoostConfig.LUNGE_WINDOW then
         ParkourController.AttemptLunge()
         return
@@ -53,6 +58,11 @@ end
 function ParkourController.AttemptSlide()
     characterObject:Slide()
     pRemote:FireServer("Sliding")
+end
+
+function ParkourController.AttemptWallRun()
+    characterObject:StartWallRun()
+    pRemote:FireServer("WallRun")
 end
 
 

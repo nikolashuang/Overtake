@@ -9,7 +9,7 @@ local ParkourController = require(script.Parent.Controllers.ParkourController)
 local ClientCharacter = require(RepStorage.Shared.Character.CharacterClass)
 local AnimationController = require(StarterPlr.StarterPlayerScripts.Controllers.AnimationController)
 local UIController = require(script.Parent.Controllers.UIController)
-
+local InputController = require(script.Parent.Controllers.InputController)
 
 
 local player = Players.LocalPlayer
@@ -30,10 +30,6 @@ UIController.Init({
 
 local debugUI = UIController.debugButton
 
-
-local function isKeyDown(key)
-    return UserInput:IsKeyDown(Enum.KeyCode[key])
-end
 
 player.CharacterAdded:Connect(function(newCharacter)
     characterObject:BindCharacter(newCharacter)
@@ -62,7 +58,7 @@ end)
 RunService.PostSimulation:Connect(function(deltaTime)
     characterObject:UpdateMomentum(deltaTime)
 
-    if isKeyDown("LeftShift") and isKeyDown("W") and characterObject.isSliding and characterObject.MomentumUnit > 0 then
+    if ((InputController.isCameraLocked() and InputController.isKeyDown("LeftShift") and InputController.isKeyDown("W")) or (not InputController.isCameraLocked() and InputController.isKeyDown("LeftShift") and InputController.ifWASD())) and characterObject.isSliding and characterObject.MomentumUnit > 0 then
         characterObject:SlideDecay(deltaTime)
         characterObject.currentMovementAnim = "SlideAnim"
     else
