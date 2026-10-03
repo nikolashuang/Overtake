@@ -337,11 +337,17 @@ function CharacterClass:WallRun()
 end
 
 
+function CharacterClass:EndWallRun()
+
+end
+
+
 --RECOVERY--
 
 function CharacterClass:CanRecoveryRoll()
 
 end
+
 
 function CharacterClass:CanLedgeCatch()
 
