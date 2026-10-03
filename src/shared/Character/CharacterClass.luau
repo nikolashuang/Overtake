@@ -319,6 +319,7 @@ function CharacterClass:UpdateWallRunObj()
 
     self.WallObject = wallobj
     self.WallDirection = direction
+    self.ableWallRun = true
 
 end
 
@@ -372,6 +373,7 @@ end
 
 
 function CharacterClass:EndWallRun()
+    
 
 end
 

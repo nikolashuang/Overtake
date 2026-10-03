@@ -58,7 +58,7 @@ end)
 RunService.PostSimulation:Connect(function(deltaTime)
     characterObject:UpdateMomentum(deltaTime)
 
-    if ((InputController.isCameraLocked() and InputController.isKeyDown("LeftShift") and InputController.isKeyDown("W")) or (not InputController.isCameraLocked() and InputController.isKeyDown("LeftShift") and InputController.ifWASD())) and characterObject.isSliding and characterObject.MomentumUnit > 0 then
+    if InputController.MaintainSlideInput() and characterObject.isSliding and characterObject.MomentumUnit > 0 then
         characterObject:SlideDecay(deltaTime)
         characterObject.currentMovementAnim = "SlideAnim"
     else
