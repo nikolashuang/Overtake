@@ -1,7 +1,6 @@
 local RepStorage = game:GetService("ReplicatedStorage")
 
 local ParkourConfig = require(RepStorage.Shared.Parkour.ParkourConfig)
-local InputController = require(script.Parent.InputController)
 local BoostConfig = ParkourConfig.Boost
 
 local pRemote = RepStorage.Remotes.ParkourRemote

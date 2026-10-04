@@ -15,7 +15,7 @@ function UIController.ChangeDebugModeUI(debugMode)
 end
 
 function UIController.UpdateMomentum(momentumUnit)
-    mainGui.MomentumUnit.Text = "MomentumUnit: " .. momentumUnit
+    mainGui.MomentumUnit.Text = "MomentumUnit: " .. math.round(momentumUnit)
 end
 
 

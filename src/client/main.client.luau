@@ -44,12 +44,12 @@ UserInput.InputBegan:Connect(function(input, processed)
 end)
 
 
-RunService.PreRender:Connect(function()
+RunService.PreRender:Connect(function(deltaTime)
     characterObject:UpdateVaultObject()
     characterObject:UpdateWallRunObj()
 
     if characterObject.isWallRunning then
-        characterObject:UpdateWallRun(InputController.isKeyDown("W"))
+        characterObject:UpdateWallRun(InputController.isKeyDown("W"), deltaTime)
     end
 
     AnimationController.UpdateMovementAnimation(characterObject)
@@ -57,6 +57,7 @@ end)
 
 RunService.PostSimulation:Connect(function(deltaTime)
     characterObject:UpdateMomentum(deltaTime)
+    UIController.UpdateMomentum(characterObject.MomentumUnit)
 
     if InputController.MaintainSlideInput() and characterObject.isSliding and characterObject.MomentumUnit > 0 then
         characterObject:SlideDecay(deltaTime)

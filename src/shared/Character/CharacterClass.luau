@@ -1,11 +1,9 @@
 local RepStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
-local StarterPlr = game:GetService("StarterPlayer")
 local Debris = game:GetService("Debris")
 
 local ParkourPhysics = require(RepStorage.Shared.Parkour.ParkourPhysics)
 local ParkourConfig = require(RepStorage.Shared.Parkour.ParkourConfig)
-local UIController = require(StarterPlr.StarterPlayerScripts.Controllers.UIController)
 
 local VaultConfig = ParkourConfig.Vault
 local MomentumConfig = ParkourConfig.Momentum
@@ -29,7 +27,7 @@ function CharacterClass.new(player, system)
     self.SlideCollider = nil
 
     self.MomentumUnit = 0
-    self.RisingMomentum = 5
+    self.RisingMomentum = MomentumConfig.MIN_RISING_MOMENTUM
 
     self.Attributes = {}
 
@@ -51,6 +49,7 @@ function CharacterClass.new(player, system)
     self.isWallRunning = false
     self.WallRunAlignment = nil
     self.WallRunSpeed = nil
+    self.InWallRunTime = 0
 
     self.LastLunge = 0
     self.LastVault = 0
@@ -116,15 +115,15 @@ function CharacterClass:UpdateMomentum(deltaTime)
         self.Stationary += deltaTime
         if self.Stationary >= 1 and self.MomentumUnit > MomentumConfig.MIN_MOMENTUM then
             self.MomentumUnit = math.max(MomentumConfig.MIN_MOMENTUM, self.MomentumUnit - 50 * deltaTime)
-            self.RisingMomentum = 5
+            self.RisingMomentum = MomentumConfig.MIN_RISING_MOMENTUM
         end
     end
 
-    UIController.UpdateMomentum(self.MomentumUnit)
     self.Humanoid.WalkSpeed += (self.MomentumUnit * 0.25)
 end
 
 function CharacterClass:ConsumeMomentum(value, deltaTime)
+    self.RisingMomentum = MomentumConfig.MIN_RISING_MOMENTUM
     self.MomentumUnit = math.max(MomentumConfig.MIN_MOMENTUM, self.MomentumUnit - value * (deltaTime or 1))
 end
 
@@ -295,7 +294,6 @@ function CharacterClass:Slide()
     self.Humanoid.AutoRotate = false
     self.SlideDirection = self.Humanoid.MoveDirection.Unit
     self.HaltMomentum = true
-    self.RisingMomentum = 5
 
     self:ChangeSlideCollision()
 
@@ -350,7 +348,6 @@ function CharacterClass:StartWallRun()
     humanoid.AutoRotate = false
 
     self.isWallRunning = true
-    self.LastWallRun = time()
     self.HaltMomentum = true
 
     self.WallRunAlignment = Instance.new("AlignOrientation")
@@ -388,7 +385,7 @@ function CharacterClass:StartWallRun()
 
 end
 
-function CharacterClass:UpdateWallRun(wInput)
+function CharacterClass:UpdateWallRun(wInput, deltaTime)
     local root = self.RootPart
 
     if not self.WallObject or not wInput then
@@ -396,8 +393,11 @@ function CharacterClass:UpdateWallRun(wInput)
         return
     end
 
+    self.InWallRunTime += deltaTime
+
     local currentVelocity = root.AssemblyLinearVelocity
     local verticalVelocity = math.max(currentVelocity.Y, -4)
+    local driftVerticalVelocity = -9
     local wallNormal = self.WallObject.Normal
     local pushDirection = -wallNormal
     local attachPressure = WallRunConfig.WALL_ATTACH_PRESSURE
@@ -411,10 +411,15 @@ function CharacterClass:UpdateWallRun(wInput)
 
     if self.WallRunSpeed == nil then self.WallRunSpeed = math.max(currentVelocity:Dot(tangent), WallRunConfig.MIN_WALLRUN_MOMENTUM * 0.25) end
 
+    if self.InWallRunTime > WallRunConfig.WALL_RUN_WINDOW then
+        self.WallRunSpeed = math.max(10, self.WallRunSpeed - WallRunConfig.WALL_RUN_DECAY * deltaTime)
+        root.AssemblyLinearVelocity = (tangent * self.WallRunSpeed) + (pushDirection * attachPressure) + Vector3.new(0, driftVerticalVelocity, 0)
+        self:ConsumeMomentum(WallRunConfig.WALL_RUN_DECAY, deltaTime)
+    else
+        root.AssemblyLinearVelocity = (tangent * self.WallRunSpeed) + (pushDirection * attachPressure) + Vector3.new(0, verticalVelocity, 0)
+    end
 
-    root.AssemblyLinearVelocity = (tangent * self.WallRunSpeed) + (pushDirection * attachPressure) + Vector3.new(0, verticalVelocity, 0)
     self.WallRunAlignment.CFrame = CFrame.lookAt(Vector3.zero, tangent)
-
     self.Humanoid.AutoRotate = false
 end
 
@@ -426,6 +431,8 @@ function CharacterClass:EndWallRun()
     self.WallObject = nil
     self.WallDirection = nil
     self.WallRunSpeed = nil
+    self.InWallRunTime = 0
+    self.LastWallRun = time()
 
     if self.WallRunAlignment then
         self.WallRunAlignment:Destroy()
@@ -434,11 +441,6 @@ function CharacterClass:EndWallRun()
 
     humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
     humanoid.AutoRotate = true
-end
-
-
-function CharacterClass:WallDrift()
-
 end
 
 
