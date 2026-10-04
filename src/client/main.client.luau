@@ -52,6 +52,11 @@ end)
 RunService.PreRender:Connect(function()
     characterObject:UpdateVaultObject()
     characterObject:UpdateWallRunObj()
+
+    if characterObject.isWallRunning then
+        characterObject:UpdateWallRun()
+    end
+
     AnimationController.UpdateMovementAnimation(characterObject)
 end)
 

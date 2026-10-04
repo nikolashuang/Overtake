@@ -1,6 +1,7 @@
 local RepStorage = game:GetService("ReplicatedStorage")
 
 local ParkourConfig = require(RepStorage.Shared.Parkour.ParkourConfig)
+local InputController = require(script.Parent.InputController)
 local BoostConfig = ParkourConfig.Boost
 
 local pRemote = RepStorage.Remotes.ParkourRemote
@@ -27,9 +28,11 @@ function ParkourController.HandleInput(input)
 end
 
 function ParkourController.HandleSpaceInput()
-    if characterObject:CanWallRun() then 
+    if characterObject:CanWallRun() and not characterObject.isWallRunning then 
         ParkourController.AttemptWallRun()
         return
+    else
+        characterObject:EndWallRun()
     end
 
     if characterObject:CanLunge() and time() - mb3 < BoostConfig.LUNGE_WINDOW then
