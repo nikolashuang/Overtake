@@ -22,11 +22,6 @@ local characterObject = ClientCharacter.new(player, {AnimationController = Anima
 characterObject:BindCharacter(character)
 
 ParkourController.Init(characterObject)
-UIController.Init({
-    DebugUI = {
-        ParkourPhysics = ParkourPhysics
-    }
-})
 
 local debugUI = UIController.debugButton
 

@@ -98,7 +98,6 @@ function ParkourPhysics.DetectObstacle(character, vaultDistance)
 	local stableRootPosition = root.CFrame:PointToWorldSpace(stableRootOffset)
     local stableKneePosition = root.CFrame:PointToWorldSpace(stableKneeOffset)
 
-    print(ParkourPhysics.debugMode)
 
     if ParkourPhysics.debugMode and next(debugVaultBeams) == nil then
         debugVaultBeams.debugWaistBeam = CreateRaycastBeam(root, stableRootOffset)

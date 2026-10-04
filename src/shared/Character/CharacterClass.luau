@@ -1,9 +1,11 @@
 local RepStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local StarterPlr = game:GetService("StarterPlayer")
 local Debris = game:GetService("Debris")
 
 local ParkourPhysics = require(RepStorage.Shared.Parkour.ParkourPhysics)
 local ParkourConfig = require(RepStorage.Shared.Parkour.ParkourConfig)
+local UIController = require(StarterPlr.StarterPlayerScripts.Controllers.UIController)
 
 local VaultConfig = ParkourConfig.Vault
 local MomentumConfig = ParkourConfig.Momentum
@@ -48,6 +50,7 @@ function CharacterClass.new(player, system)
     self.WallDirection = nil
     self.isWallRunning = false
     self.WallRunAlignment = nil
+    self.WallRunSpeed = nil
 
     self.LastLunge = 0
     self.LastVault = 0
@@ -117,7 +120,7 @@ function CharacterClass:UpdateMomentum(deltaTime)
         end
     end
 
-    --print(self.MomentumUnit)
+    UIController.UpdateMomentum(self.MomentumUnit)
     self.Humanoid.WalkSpeed += (self.MomentumUnit * 0.25)
 end
 
@@ -354,7 +357,7 @@ function CharacterClass:StartWallRun()
     self.WallRunAlignment.Attachment0 = self.MovementAttachment
     self.WallRunAlignment.Mode = Enum.OrientationAlignmentMode.OneAttachment
     self.WallRunAlignment.RigidityEnabled = false
-    self.WallRunAlignment.Responsiveness = 20
+    self.WallRunAlignment.Responsiveness = 40
     self.WallRunAlignment.MaxTorque = 50000
     self.WallRunAlignment.MaxAngularVelocity = 12
 
@@ -387,7 +390,6 @@ end
 
 function CharacterClass:UpdateWallRun(wInput)
     local root = self.RootPart
-    local look = root.CFrame.LookVector
 
     if not self.WallObject or not wInput then
         self:EndWallRun()
@@ -401,16 +403,19 @@ function CharacterClass:UpdateWallRun(wInput)
     local attachPressure = WallRunConfig.WALL_ATTACH_PRESSURE
 
     local tangent = Vector3.yAxis:Cross(wallNormal).Unit
-    local flatLook = Vector3.new(look.X, 0, look.Z).Unit
+    local horizontalVelocity = Vector3.new(currentVelocity.X, 0, currentVelocity.Z).Unit
 
-    if tangent:Dot(flatLook) < 0 then
+    if tangent:Dot(horizontalVelocity) < 0 then
         tangent = -tangent
     end
 
-    local forwardSpeed = math.max(currentVelocity:Dot(tangent), WallRunConfig.MIN_WALLRUN_MOMENTUM * 0.25)
+    if self.WallRunSpeed == nil then self.WallRunSpeed = math.max(currentVelocity:Dot(tangent), WallRunConfig.MIN_WALLRUN_MOMENTUM * 0.25) end
 
-    root.AssemblyLinearVelocity = (tangent * forwardSpeed) + (pushDirection * attachPressure) + Vector3.new(0, verticalVelocity, 0)
+
+    root.AssemblyLinearVelocity = (tangent * self.WallRunSpeed) + (pushDirection * attachPressure) + Vector3.new(0, verticalVelocity, 0)
     self.WallRunAlignment.CFrame = CFrame.lookAt(Vector3.zero, tangent)
+
+    self.Humanoid.AutoRotate = false
 end
 
 function CharacterClass:EndWallRun()
@@ -420,6 +425,7 @@ function CharacterClass:EndWallRun()
     self.HaltMomentum = false
     self.WallObject = nil
     self.WallDirection = nil
+    self.WallRunSpeed = nil
 
     if self.WallRunAlignment then
         self.WallRunAlignment:Destroy()
