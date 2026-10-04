@@ -385,17 +385,17 @@ function CharacterClass:StartWallRun()
 
 end
 
-function CharacterClass:UpdateWallRun()
+function CharacterClass:UpdateWallRun(wInput)
     local root = self.RootPart
     local look = root.CFrame.LookVector
 
-    if not self.WallObject then
+    if not self.WallObject or not wInput then
         self:EndWallRun()
         return
     end
 
     local currentVelocity = root.AssemblyLinearVelocity
-    local verticalVelocity = math.max(currentVelocity.Y, -2)
+    local verticalVelocity = math.max(currentVelocity.Y, -4)
     local wallNormal = self.WallObject.Normal
     local pushDirection = -wallNormal
     local attachPressure = WallRunConfig.WALL_ATTACH_PRESSURE

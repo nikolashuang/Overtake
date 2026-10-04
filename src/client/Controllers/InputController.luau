@@ -32,5 +32,17 @@ function InputController.MaintainSlideInput()
     return false
 end
 
+function InputController.CheckWallRunKey()
+    if InputController.isKeyDown("A") and InputController.isKeyDown("D") then
+        return nil
+    elseif InputController.isKeyDown("A") then
+        return "A"
+    elseif InputController.isKeyDown("D") then
+        return "D"
+    end
+
+    return nil
+end
+
 
 return InputController

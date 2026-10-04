@@ -54,7 +54,7 @@ RunService.PreRender:Connect(function()
     characterObject:UpdateWallRunObj()
 
     if characterObject.isWallRunning then
-        characterObject:UpdateWallRun()
+        characterObject:UpdateWallRun(InputController.isKeyDown("W"))
     end
 
     AnimationController.UpdateMovementAnimation(characterObject)
