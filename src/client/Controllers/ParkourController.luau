@@ -30,8 +30,6 @@ function ParkourController.HandleSpaceInput()
     if characterObject:CanWallRun() and not characterObject.isWallRunning then 
         ParkourController.AttemptWallRun()
         return
-    else
-        characterObject:EndWallRun()
     end
 
     if characterObject:CanLunge() and time() - mb3 < BoostConfig.LUNGE_WINDOW then

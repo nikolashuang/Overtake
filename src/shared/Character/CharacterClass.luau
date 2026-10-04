@@ -388,7 +388,7 @@ end
 function CharacterClass:UpdateWallRun(wInput, deltaTime)
     local root = self.RootPart
 
-    if not self.WallObject or not wInput then
+    if not self.WallObject or not wInput or self.MomentumUnit < 25 then
         self:EndWallRun()
         return
     end
@@ -425,6 +425,10 @@ end
 
 function CharacterClass:EndWallRun()
     local humanoid = self.Humanoid
+
+    if not self.isWallRunning then
+        return 
+    end
     
     self.isWallRunning = false
     self.HaltMomentum = false
