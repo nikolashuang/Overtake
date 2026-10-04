@@ -15,6 +15,15 @@ function ParkourController.Init(CharInfo)
 end
 
 function ParkourController.HandleInput(input)
+    print(characterObject.isWallRunning)
+    if characterObject.isWallRunning then
+        if input.KeyCode == Enum.KeyCode.A then
+            ParkourController.AttemptWallRedirect("A")
+        elseif input.KeyCode == Enum.KeyCode.D then
+            ParkourController.AttemptWallRedirect("D")
+        end
+    end
+    
     if input.KeyCode == Enum.KeyCode.LeftShift and characterObject:CanSlide() then
         ParkourController.AttemptSlide()
         return
@@ -29,6 +38,9 @@ end
 function ParkourController.HandleSpaceInput()
     if characterObject:CanWallRun() and not characterObject.isWallRunning then 
         ParkourController.AttemptWallRun()
+        return
+    elseif characterObject.isWallRunning then
+        characterObject:EndWallRun()
         return
     end
 
@@ -63,6 +75,11 @@ end
 function ParkourController.AttemptWallRun()
     characterObject:StartWallRun()
     pRemote:FireServer("WallRun")
+end
+
+function ParkourController.AttemptWallRedirect(input)
+    characterObject:WallRedirect(input)
+    pRemote:FireServer("WallRedirect")
 end
 
 

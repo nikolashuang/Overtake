@@ -460,6 +460,31 @@ function CharacterClass:EndWallRun()
     humanoid.AutoRotate = true
 end
 
+function CharacterClass:WallRedirect(inputKey)
+    local root = self.RootPart
+
+    local linVel = Instance.new("LinearVelocity")
+    linVel.Attachment0 = self.MovementAttachment
+    linVel.RelativeTo = Enum.ActuatorRelativeTo.World
+    linVel.ForceLimitsEnabled = false
+
+    local rightVector = root.CFrame.RightVector
+
+    if inputKey == "A" and self.WallDirection == "Right" then
+        linVel.VectorVelocity = -rightVector * WallRunConfig.WALL_REDIRECT_HORIZONTAL_POWER + Vector3.new(0, WallRunConfig.WALL_REDIRECT_UPWARD_POWER, 0)
+    elseif inputKey == "D" and self.WallDirection == "Left" then
+        linVel.VectorVelocity = rightVector * WallRunConfig.WALL_REDIRECT_HORIZONTAL_POWER + Vector3.new(0, WallRunConfig.WALL_REDIRECT_UPWARD_POWER, 0)
+    else
+        return
+    end
+
+    WallRunConfig.WALL_RUN_CD = 0 --refresh cd on wallredirect
+    linVel.Parent = root
+
+    Debris:AddItem(linVel, 0.3)
+
+end
+
 
 --RECOVERY--
 

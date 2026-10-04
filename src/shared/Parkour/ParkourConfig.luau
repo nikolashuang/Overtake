@@ -33,10 +33,12 @@ local ParkourConfig = {
         MIN_WALLRUN_MOMENTUM = 50,
         MAX_WALL_ATTACH_DISTANCE = 4,
         WALL_RUN_WINDOW = 2,
-        WALL_RUN_DECAY = 75,
+        WALL_RUN_DECAY = 33,
         INIT_WALLRUN_HEIGHT_BOOST = 20,
         WALL_ATTACH_PRESSURE = 5,
-        WALL_RUN_CD = 0.5
+        WALL_RUN_CD = 0.5,
+        WALL_REDIRECT_HORIZONTAL_POWER = 30,
+        WALL_REDIRECT_UPWARD_POWER = 25
     }
 
 
