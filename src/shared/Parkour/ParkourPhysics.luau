@@ -2,7 +2,7 @@ local ParkourPhysics = {}
 
 -- DEBUG TOOLS --
 
-ParkourPhysics.debugMode = true
+ParkourPhysics.debugMode = false
 
 local debugVaultBeams = {
     debugWaistBeam = nil,

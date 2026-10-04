@@ -22,6 +22,8 @@ local characterObject = ClientCharacter.new(player, {AnimationController = Anima
 characterObject:BindCharacter(character)
 
 ParkourController.Init(characterObject)
+UIController.ChangeDebugModeUI(ParkourPhysics.debugMode)
+
 
 local debugUI = UIController.debugButton
 
@@ -53,6 +55,7 @@ RunService.PreRender:Connect(function(deltaTime)
     end
 
     AnimationController.UpdateMovementAnimation(characterObject)
+    AnimationController.UpdateWallMovementAnimation(characterObject)
 end)
 
 RunService.PostSimulation:Connect(function(deltaTime)

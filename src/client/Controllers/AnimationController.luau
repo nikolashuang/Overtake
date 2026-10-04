@@ -15,6 +15,12 @@ local AnimationStorage = {
         VaultVariant1 = AnimationFolder.Parkour:FindFirstChild("VaultVariant1"),
         HurdleAnim = AnimationFolder.Parkour:FindFirstChild("Hurdle"),
         SlideAnim = AnimationFolder.Parkour:FindFirstChild("Slide"),
+        RightStartWallRunAnim = AnimationFolder.Parkour:FindFirstChild("StartWallRun[Right]"),
+        LeftStartWallRunAnim = AnimationFolder.Parkour:FindFirstChild("StartWallRun[Left]"),
+        RightWallRunAnim = AnimationFolder.Parkour:FindFirstChild("RightWallRun"),
+        LeftWallRunAnim = AnimationFolder.Parkour:FindFirstChild("LeftWallRun"),
+        RightWallDriftAnim = AnimationFolder.Parkour:FindFirstChild("RightWallDrift"),
+        LeftWallDriftAnim = AnimationFolder.Parkour:FindFirstChild("LeftWallDrift")
     }
 
 }
@@ -128,6 +134,56 @@ function AnimationController.UpdateMovementAnimation(characterObject)
 
     AnimationController.PlayAnimation("MovementAnims", newAnim)
     characterObject.currentMovementAnim = newAnim
+
+end
+
+function AnimationController.PlayStartWallRun(characterObject)
+    local track = nil
+    local wallDirection = characterObject.WallDirection
+
+    if wallDirection == "Right" then
+        track = LoadedTracks.ParkourAnims.RightStartWallRunAnim
+    else
+        track = LoadedTracks.ParkourAnims.LeftStartWallRunAnim
+    end
+    track:Play()
+
+    track.Stopped:Once(function()
+        if not characterObject.isWallRunning then return end
+
+        if wallDirection == "Right" then
+            AnimationController.PlayAnimation("ParkourAnims", "RightWallRunAnim")
+        else
+            AnimationController.PlayAnimation("ParkourAnims", "LeftWallRunAnim")
+        end
+    end)
+
+
+end
+
+function AnimationController.UpdateWallMovementAnimation(characterObject)
+    local characterState = characterObject.Humanoid:GetState()
+
+    if characterState ~= Enum.HumanoidStateType.Freefall or not characterObject.isWallRunning then
+        AnimationController.StopAnimation("ParkourAnims", "RightWallRunAnim")
+        AnimationController.StopAnimation("ParkourAnims", "LeftWallRunAnim")
+        AnimationController.StopAnimation("ParkourAnims", "RightWallDriftAnim")
+        AnimationController.StopAnimation("ParkourAnims", "LeftWallDriftAnim")
+        characterObject.currWallMovementAnim = nil
+        return
+    end
+
+    if characterObject.nowWallDrifting and not characterObject.isPlayingWallDrift then
+        AnimationController.StopAnimation("ParkourAnims", "RightWallRunAnim")
+        AnimationController.StopAnimation("ParkourAnims", "LeftWallRunAnim")
+        characterObject.isPlayingWallDrift = true
+        if characterObject.WallDirection == "Right" then
+            AnimationController.PlayAnimation("ParkourAnims", "RightWallDriftAnim")
+        else
+            AnimationController.PlayAnimation("ParkourAnims", "LeftWallDriftAnim")
+        end
+        return
+    end
 
 end
 

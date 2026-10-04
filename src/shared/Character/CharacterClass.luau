@@ -30,6 +30,7 @@ function CharacterClass.new(player, system)
     self.RisingMomentum = MomentumConfig.MIN_RISING_MOMENTUM
 
     self.Attributes = {}
+    self.Modifiers = {}
 
     self.Staggered = false
     self.Fatigue = false
@@ -47,9 +48,11 @@ function CharacterClass.new(player, system)
     self.WallObject = nil
     self.WallDirection = nil
     self.isWallRunning = false
+    self.nowWallDrifting = false
     self.WallRunAlignment = nil
     self.WallRunSpeed = nil
     self.InWallRunTime = 0
+    self.isPlayingWallDrift = false
 
     self.LastLunge = 0
     self.LastVault = 0
@@ -88,11 +91,16 @@ function CharacterClass:BindCharacter(character)
 
         self.SlideCollider.Name = "SlideCollider"
         self.SlideCollider.Parent = self.Character
-        self.SlideCollider.Transparency = 0.5
         self.SlideCollider.CanCollide = false
         self.SlideCollider.Massless = true
         self.SlideCollider.Position = self.RootPart.Position + Vector3.new(0, -2, 0)
         self.SlideCollider.Size = Vector3.new(3.75, 2, 2.5)
+
+        if ParkourPhysics.debugMode == false then
+            self.SlideCollider.Transparency = 1
+        else
+            self.SlideCollider.Transparency = 0.5
+        end
 
     else
         self.SlideCollider = self.Character:WaitForChild("SlideCollider")
@@ -376,6 +384,8 @@ function CharacterClass:StartWallRun()
     linVel.VectorVelocity = flatLook * forwardSpeed + Vector3.new(0, WallRunConfig.INIT_WALLRUN_HEIGHT_BOOST, 0)
     align.CFrame = CFrame.lookAt(Vector3.zero, flatLook)
 
+    self.AnimationController.PlayStartWallRun(self)
+
     linVel.Parent = root
     align.Parent = root
     self.WallRunAlignment.Parent = root
@@ -412,6 +422,7 @@ function CharacterClass:UpdateWallRun(wInput, deltaTime)
     if self.WallRunSpeed == nil then self.WallRunSpeed = math.max(currentVelocity:Dot(tangent), WallRunConfig.MIN_WALLRUN_MOMENTUM * 0.25) end
 
     if self.InWallRunTime > WallRunConfig.WALL_RUN_WINDOW then
+        self.nowWallDrifting = true
         self.WallRunSpeed = math.max(10, self.WallRunSpeed - WallRunConfig.WALL_RUN_DECAY * deltaTime)
         root.AssemblyLinearVelocity = (tangent * self.WallRunSpeed) + (pushDirection * attachPressure) + Vector3.new(0, driftVerticalVelocity, 0)
         self:ConsumeMomentum(WallRunConfig.WALL_RUN_DECAY, deltaTime)
@@ -431,6 +442,8 @@ function CharacterClass:EndWallRun()
     end
     
     self.isWallRunning = false
+    self.nowWallDrifting = false
+    self.isPlayingWallDrift = false
     self.HaltMomentum = false
     self.WallObject = nil
     self.WallDirection = nil
