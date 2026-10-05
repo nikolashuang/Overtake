@@ -47,6 +47,7 @@ end)
 
 
 RunService.PreRender:Connect(function(deltaTime)
+    characterObject:JustLanded()
     characterObject:UpdateVaultObject()
     characterObject:UpdateWallRunObj()
 
@@ -60,9 +61,9 @@ end)
 
 RunService.PostSimulation:Connect(function(deltaTime)
     characterObject:UpdateMomentum(deltaTime)
-    characterObject:UpdateFreefall()
+    characterObject:UpdateVelocities()
     UIController.UpdateMomentum(characterObject.MomentumUnit)
-    UIController.UpdateFallSpeed(characterObject.FreefallSpeed, characterObject.LastFallSpeed)
+    UIController.UpdateVelocities(characterObject.FreefallSpeed, characterObject.LastFallSpeed, characterObject.ForwardVelocity)
 
     if InputController.MaintainSlideInput() and characterObject.isSliding and characterObject.MomentumUnit > 0 then
         characterObject:SlideDecay(deltaTime)

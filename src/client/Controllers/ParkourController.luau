@@ -24,8 +24,13 @@ function ParkourController.HandleInput(input)
         end
     end
     
-    if input.KeyCode == Enum.KeyCode.LeftShift and characterObject:CanSlide() then
-        ParkourController.AttemptSlide()
+    
+    if input.KeyCode == Enum.KeyCode.LeftShift then
+        if characterObject:CanRecoveryRoll() then
+            ParkourController.AttemptRoll()
+        elseif characterObject:CanSlide() then
+            ParkourController.AttemptSlide()
+        end
         return
     end
 
@@ -80,6 +85,11 @@ end
 function ParkourController.AttemptWallRedirect(input)
     characterObject:WallRedirect(input)
     pRemote:FireServer("WallRedirect")
+end
+
+function ParkourController.AttemptRoll()
+    characterObject:RecoveryRoll()
+    pRemote:FireServer("RecoveryRoll")
 end
 
 

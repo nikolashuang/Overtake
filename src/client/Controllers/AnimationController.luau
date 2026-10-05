@@ -20,7 +20,8 @@ local AnimationStorage = {
         RightWallRunAnim = AnimationFolder.Parkour:FindFirstChild("RightWallRun"),
         LeftWallRunAnim = AnimationFolder.Parkour:FindFirstChild("LeftWallRun"),
         RightWallDriftAnim = AnimationFolder.Parkour:FindFirstChild("RightWallDrift"),
-        LeftWallDriftAnim = AnimationFolder.Parkour:FindFirstChild("LeftWallDrift")
+        LeftWallDriftAnim = AnimationFolder.Parkour:FindFirstChild("LeftWallDrift"),
+        RecoveryRollAnim = AnimationFolder.Parkour:FindFirstChild("RecoveryRoll")
     }
 
 }

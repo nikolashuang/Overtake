@@ -9,6 +9,7 @@ local VaultConfig = ParkourConfig.Vault
 local MomentumConfig = ParkourConfig.Momentum
 local BoostConfig = ParkourConfig.Boost
 local WallRunConfig = ParkourConfig.WallRun
+local RecoveryConfig = ParkourConfig.Recovery
 
 local CharacterClass = {}
 
@@ -28,6 +29,7 @@ function CharacterClass.new(player, system)
 
     self.MomentumUnit = 0
     self.FreefallSpeed = 0
+    self.ForwardVelocity = 0
     self.RisingMomentum = MomentumConfig.MIN_RISING_MOMENTUM
 
     self.Attributes = {}
@@ -60,6 +62,7 @@ function CharacterClass.new(player, system)
     self.LastWallRun = 0
     self.LastSlide = 0
     self.LastFallSpeed = 0
+    self.Landed = 0
 
     self.currentMovementAnim = nil
 
@@ -133,12 +136,17 @@ function CharacterClass:UpdateMomentum(deltaTime)
     self.Humanoid.WalkSpeed += (self.MomentumUnit * 0.25)
 end
 
-function CharacterClass:UpdateFreefall()
+function CharacterClass:UpdateVelocities()
     local root = self.RootPart
     local humanoid = self.Humanoid
 
+    local velocity = root.AssemblyLinearVelocity
+    local horizontalVelocity = Vector3.new(velocity.X, 0, velocity.Z)
+    local look = root.CFrame.LookVector
+
     if humanoid:GetState() ~= Enum.HumanoidStateType.Freefall then
         self.FreefallSpeed = 0
+        self.ForwardVelocity = horizontalVelocity:Dot(look)
         return 
     end
 
@@ -185,6 +193,7 @@ end
 function CharacterClass:CanVault()
     if not self.ableVault then return false end
     if self.Staggered then return false end
+    if not isGrounded(self) then return false end
     if time() - self.LastVault < VaultConfig.VAULT_CD then return false end
     
     return true
@@ -327,8 +336,8 @@ function CharacterClass:Slide()
 end
 
 function CharacterClass:EndSlide()
-    if time() - self.LastSlide < 0.4 then
-        task.wait(0.7)
+    if time() - self.LastSlide < 0.25 then
+        task.wait(0.75)
     end
     
     self.isSliding = false
@@ -347,6 +356,8 @@ end
 
 ---------------------------------------------------------------------------------------------------
 
+--WALL RUN--
+
 function CharacterClass:UpdateWallRunObj()
     local wallDetectionDistance = WallRunConfig.MAX_WALL_ATTACH_DISTANCE
     local wallobj, direction = ParkourPhysics.DetectWallRuns(self.Character, wallDetectionDistance)
@@ -363,7 +374,8 @@ function CharacterClass:CanWallRun()
     if not self.ableWallRun then return false end
     if self.MomentumUnit < WallRunConfig.MIN_WALLRUN_MOMENTUM then return false end
     if time() - self.LastWallRun < WallRunConfig.WALL_RUN_CD then return false end
-    if math.abs(self.WallObject.Normal.Y) >= 0.35 then return false end  
+    if math.abs(self.WallObject.Normal.Y) >= 0.35 then return false end
+    if self.FreefallSpeed < -65 then return false end
     if isGrounded(self) then return false end
 
 
@@ -460,7 +472,7 @@ function CharacterClass:EndWallRun()
     local humanoid = self.Humanoid
 
     if not self.isWallRunning then
-        return 
+        return
     end
     
     self.isWallRunning = false
@@ -507,15 +519,48 @@ function CharacterClass:WallRedirect(inputKey)
 
 end
 
+---------------------------------------------------------------------------------------------------
+
 
 --RECOVERY--
 
 function CharacterClass:CanRecoveryRoll()
     local root = self.RootPart
-
-    if root.AssemblyLinearVelocity.Y > -80 then return false end
+    if root.AssemblyLinearVelocity.Y > RecoveryConfig.MIN_FALL_SPEED then return false end
+    if root.AssemblyLinearVelocity.Y < RecoveryConfig.MAX_FALL_SPEED then return false end
 
     return true
+end
+
+function CharacterClass:RecoveryRoll()
+    local root = self.RootPart
+
+    local currentVelocity = root.AssemblyLinearVelocity
+    local linVel = Instance.new("LinearVelocity")
+    linVel.Attachment0 = self.MovementAttachment
+    linVel.RelativeTo = Enum.ActuatorRelativeTo.World
+    linVel.ForceLimitsEnabled = false
+    linVel.Parent = root
+
+    local flatLook = Vector3.new(root.CFrame.LookVector.X, 0, root.CFrame.LookVector.Z).Unit
+    local forwardSpeed = math.max(currentVelocity:Dot(flatLook), RecoveryConfig.MIN_ROLL_SPEED)
+
+    if time() - self.Landed < RecoveryConfig.PERFECT_ROLL_WINDOW then
+        self:ConsumeMomentum(RecoveryConfig.PERFECT_ROLL_CONSUMPTION)
+    elseif time() - self.Landed > RecoveryConfig.PERFECT_ROLL_WINDOW and time() - self.Landed < RecoveryConfig.ROLL_WINDOW then
+        self:ConsumeMomentum(RecoveryConfig.ROLL_CONSUMPTION)
+    end
+
+    linVel.VectorVelocity = flatLook * forwardSpeed
+    self.AnimationController.PlayAnimation("ParkourAnims", "RecoveryRollAnim")
+
+    Debris:AddItem(linVel, 0.3)
+
+end
+
+function CharacterClass:JustLanded()
+    if self.Humanoid:GetState() ~= Enum.HumanoidStateType.Landed then return end
+    self.Landed = time()
 end
 
 

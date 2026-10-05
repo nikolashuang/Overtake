@@ -42,7 +42,13 @@ local ParkourConfig = {
     },
 
     Recovery = {
-        MIN_FALL_SPEED = -85,
+        MIN_FALL_SPEED = -65,
+        MAX_FALL_SPEED = -190,
+        PERFECT_ROLL_WINDOW = 0.15,
+        ROLL_WINDOW = 0.3,
+        PERFECT_ROLL_CONSUMPTION = 25,
+        ROLL_CONSUMPTION = 40,
+        MIN_ROLL_SPEED = 20,
     }
 
 
