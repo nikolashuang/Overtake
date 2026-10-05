@@ -60,7 +60,9 @@ end)
 
 RunService.PostSimulation:Connect(function(deltaTime)
     characterObject:UpdateMomentum(deltaTime)
+    characterObject:UpdateFreefall()
     UIController.UpdateMomentum(characterObject.MomentumUnit)
+    UIController.UpdateFallSpeed(characterObject.FreefallSpeed, characterObject.LastFallSpeed)
 
     if InputController.MaintainSlideInput() and characterObject.isSliding and characterObject.MomentumUnit > 0 then
         characterObject:SlideDecay(deltaTime)

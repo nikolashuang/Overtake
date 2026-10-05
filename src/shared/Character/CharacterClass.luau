@@ -27,6 +27,7 @@ function CharacterClass.new(player, system)
     self.SlideCollider = nil
 
     self.MomentumUnit = 0
+    self.FreefallSpeed = 0
     self.RisingMomentum = MomentumConfig.MIN_RISING_MOMENTUM
 
     self.Attributes = {}
@@ -57,6 +58,8 @@ function CharacterClass.new(player, system)
     self.LastLunge = 0
     self.LastVault = 0
     self.LastWallRun = 0
+    self.LastSlide = 0
+    self.LastFallSpeed = 0
 
     self.currentMovementAnim = nil
 
@@ -129,6 +132,20 @@ function CharacterClass:UpdateMomentum(deltaTime)
 
     self.Humanoid.WalkSpeed += (self.MomentumUnit * 0.25)
 end
+
+function CharacterClass:UpdateFreefall()
+    local root = self.RootPart
+    local humanoid = self.Humanoid
+
+    if humanoid:GetState() ~= Enum.HumanoidStateType.Freefall then
+        self.FreefallSpeed = 0
+        return 
+    end
+
+    self.FreefallSpeed = root.AssemblyLinearVelocity.Y
+    self.LastFallSpeed = self.FreefallSpeed
+end
+
 
 function CharacterClass:ConsumeMomentum(value, deltaTime)
     self.RisingMomentum = MomentumConfig.MIN_RISING_MOMENTUM
@@ -302,6 +319,7 @@ function CharacterClass:Slide()
     self.Humanoid.AutoRotate = false
     self.SlideDirection = self.Humanoid.MoveDirection.Unit
     self.HaltMomentum = true
+    self.LastSlide = time()
 
     self:ChangeSlideCollision()
 
@@ -309,6 +327,10 @@ function CharacterClass:Slide()
 end
 
 function CharacterClass:EndSlide()
+    if time() - self.LastSlide < 0.4 then
+        task.wait(0.7)
+    end
+    
     self.isSliding = false
     self.Humanoid.AutoRotate = true
     self.SlideDirection = nil

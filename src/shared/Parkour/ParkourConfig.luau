@@ -39,6 +39,10 @@ local ParkourConfig = {
         WALL_RUN_CD = 0.5,
         WALL_REDIRECT_HORIZONTAL_POWER = 30,
         WALL_REDIRECT_UPWARD_POWER = 25
+    },
+
+    Recovery = {
+        MIN_FALL_SPEED = -85,
     }
 
 
