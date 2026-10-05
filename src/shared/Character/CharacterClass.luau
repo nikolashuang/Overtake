@@ -489,7 +489,11 @@ end
 --RECOVERY--
 
 function CharacterClass:CanRecoveryRoll()
+    local root = self.RootPart
 
+    if root.AssemblyLinearVelocity.Y > -80 then return false end
+
+    return true
 end
 
 

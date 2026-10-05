@@ -48,11 +48,21 @@ Exact timing and exploit-resistant implementation are undecided.
 - Allows traversal along walls when there is not perfect footing below.
 - Gain a small upward boost when the Wall Run begins.
 - The player gets a free 1.5-second Wall Run window.
-- After the free window expires, the player enters **Wall Drift**.
+- After the free window expires, the player enters **Wall Sliding**.
+- Wall Sliding eats into the player's momentum at 33 per second while active
+- This allows players to continue moving forward at a descended rate if they couldn't reach their desired destination
 
-### Wall Drift (Only active after Wall Run)
+## Wall Drift (Only active after Wall Run) (Deprecated, now Wall Sliding)
 - The player begins sliding downward along the wall.
 - Consumes Momentum at 33 per second while active.
+
+## Wall Drift (Updated Idea)
+- Separate mechanic from Wall Run.
+- Intended as a recovery mechanic for high-speed falls.
+- If the player is falling faster than a set downward-speed threshold and is close enough to a wall, they can enter Wall Drift.
+- Wall Drift lets the player scrape/slide down the wall to reduce the severity of the fall.
+- Intended to help salvage bad falls without completely removing the consequences of poor route choice.
+- Exact downward-speed requirement, input, Momentum cost, and fall-speed reduction are undecided.
 
 ## Edge Boosting
 - If the player uses **Lunge** while on the edge of an object, greatly increase the power output.
@@ -65,10 +75,16 @@ Exact timing and exploit-resistant implementation are undecided.
 - Staying in the slide for the full bar/duration should eventually slow the player significantly and lose Momentum.
 
 ## Recovery Roll
-- Uses **Shift**
-- Within 0.3 seconds: retain Momentum.
+- Uses **Shift**.
+- Recovery Roll timing determines how much Momentum is preserved after a hard landing.
+- Within 0.3 seconds: retain most Momentum.
 - Within 0.5 seconds: lose some Momentum.
 - No successful roll: lose almost all Momentum and receive a small stagger.
+- Hard landings should still consume some Momentum even with a successful Recovery Roll.
+- Momentum loss should scale with fall severity rather than being completely negated by rolling.
+- Vertical fall distance is the current preferred value for calculating landing severity.
+- Downward velocity may be used to determine whether the fall is severe enough to trigger Recovery Roll behavior.
+- Exact fall-distance thresholds and Momentum-loss scaling are undecided.
 
 ## Wall Redirect
 - Lets the player bounce/redirect onto adjacent walls.
@@ -84,6 +100,14 @@ Exact timing and exploit-resistant implementation are undecided.
 ## Lunge
 Current design name: **Power Jumping**.
 Current implementation name in code: **Lunge**.
+Input direction:
+- Tap Middle Mouse Button, then Space shortly afterward.
+- MMB is a setup/timing input, not intended as a hold.
+
+Design intent:
+- At/near max movement speed, jumps become significantly longer.
+- Consumes Momentum.
+- Has a cooldown to prevent repeated use.
 
 ## Trip
 - If the player runs into an obstacle without vaulting or attempting to jump over it, they trip on the obstacle.
@@ -95,14 +119,6 @@ Current implementation name in code: **Lunge**.
 - The player loses more Momentum than they would from a Trip.
 - Exact Momentum loss is undecided.
 
-Input direction:
-- Tap Middle Mouse Button, then Space shortly afterward.
-- MMB is a setup/timing input, not intended as a hold.
-
-Design intent:
-- At/near max movement speed, jumps become significantly longer.
-- Consumes Momentum.
-- Has a cooldown to prevent repeated use.
 
 # Momentum
 
@@ -191,6 +207,11 @@ Afterward:
 - Player becomes fatigued for 10 seconds.
 - Fatigue reduces Momentum gained from movement/parkour.
 - During fatigue, effective Momentum is capped at 75% of normal maximum.
+
+## I Don't Need Assistance
+- Automatically granted when the player has no **Attributes** equipped.
+- Provides no gameplay benefits.
+- Exists purely as a prestige/flex option to show opponents that the player is competing without Attribute bonuses.
 
 # Gadgets — Future Scope
 
