@@ -79,6 +79,9 @@ RunService:BindToRenderStep("LockSlideDirection", Enum.RenderPriority.Character.
     end
 end)
 
+
+--MISCELLANEOUS--
+
 debugUI.Activated:Connect(function()
     ParkourPhysics.debugMode = not ParkourPhysics.debugMode
     UIController.ChangeDebugModeUI(ParkourPhysics.debugMode)
@@ -88,6 +91,22 @@ debugUI.Activated:Connect(function()
     else
         characterObject.SlideCollider.Transparency = 0.5
     end
+end)
+
+local wasAirborne = characterObject.Humanoid.FloorMaterial == Enum.Material.Air
+characterObject.Humanoid:GetPropertyChangedSignal("FloorMaterial"):Connect(function()
+    local isAirborne = characterObject.Humanoid.FloorMaterial == Enum.Material.Air
+
+    if isAirborne then
+        wasAirborne = true
+        return
+    end
+
+    if wasAirborne then
+        wasAirborne = false
+        ParkourController.HandleLanding()
+    end
+
 end)
 
 

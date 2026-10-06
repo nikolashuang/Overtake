@@ -2,15 +2,16 @@ local RepStorage = game:GetService("ReplicatedStorage")
 
 local ParkourConfig = require(RepStorage.Shared.Parkour.ParkourConfig)
 local BoostConfig = ParkourConfig.Boost
-local RecoveryConfg = ParkourConfig.Recovery
+local RecoveryConfig = ParkourConfig.Recovery
 
 local pRemote = RepStorage.Remotes.ParkourRemote
 local characterObject = nil
 local mb3 = 0
-local ShiftRollInput = 0
 
 
 local ParkourController = {}
+
+ParkourController.shiftInput = time()
 
 function ParkourController.Init(CharInfo)
     characterObject = CharInfo
@@ -27,11 +28,12 @@ function ParkourController.HandleInput(input)
     
     
     if input.KeyCode == Enum.KeyCode.LeftShift then
-        ShiftRollInput = time()
-        local timingWindow = ShiftRollInput - characterObject.Landed
-        if characterObject:CanRecoveryRoll() and timingWindow < RecoveryConfg.ROLL_WINDOW  then
-            ParkourController.AttemptRoll(timingWindow)
-        elseif characterObject:CanSlide() then
+        ParkourController.shiftInput = time()
+        if characterObject.TempLockSliding and characterObject:isGrounded() then
+            characterObject:RecoveryRoll(characterObject.Landed - ParkourController.shiftInput)
+        end
+
+        if characterObject:CanSlide() then
             ParkourController.AttemptSlide()
         end
         return
@@ -44,7 +46,7 @@ function ParkourController.HandleInput(input)
 end
 
 function ParkourController.HandleSpaceInput()
-    if characterObject:CanWallRun() and not characterObject.isWallRunning then 
+    if characterObject:CanWallRun() and not characterObject.isWallRunning then
         ParkourController.AttemptWallRun()
         return
     elseif characterObject.isWallRunning then
@@ -61,6 +63,22 @@ function ParkourController.HandleSpaceInput()
         ParkourController.AttemptVault()
         return
     end
+end
+
+function ParkourController.HandleLanding(newState)
+    characterObject.Landed = time()
+
+    local timingWindow =  characterObject.Landed - ParkourController.shiftInput
+
+    task.delay(0.05, function()
+        if characterObject:CanRecoveryRoll() and timingWindow < RecoveryConfig.ROLL_WINDOW then
+            ParkourController.AttemptRoll(timingWindow)
+        end
+    end)
+
+    task.delay(0.75, function()
+        characterObject.TempLockSliding = false
+    end)
 end
 
 

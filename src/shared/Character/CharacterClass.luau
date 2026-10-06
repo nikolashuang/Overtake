@@ -46,6 +46,7 @@ function CharacterClass.new(player, system)
     self.vaultObject = nil
     self.SlideDirection = nil
     self.isSliding = false
+    self.TempLockSliding = false
 
     self.ableWallRun = false
     self.WallObject = nil
@@ -70,7 +71,7 @@ function CharacterClass.new(player, system)
     return self
 end
 
-local function isGrounded(self)
+function CharacterClass:isGrounded()
     return self.Humanoid.FloorMaterial ~= Enum.Material.Air
 end
 
@@ -152,6 +153,10 @@ function CharacterClass:UpdateVelocities()
 
     self.FreefallSpeed = root.AssemblyLinearVelocity.Y
     self.LastFallSpeed = self.FreefallSpeed
+
+    if self.FreefallSpeed < RecoveryConfig.MIN_FALL_SPEED then
+        self.TempLockSliding = true
+    end
 end
 
 
@@ -193,7 +198,7 @@ end
 function CharacterClass:CanVault()
     if not self.ableVault then return false end
     if self.Staggered then return false end
-    if not isGrounded(self) then return false end
+    if not self:isGrounded() then return false end
     if time() - self.LastVault < VaultConfig.VAULT_CD then return false end
     
     return true
@@ -318,7 +323,8 @@ function CharacterClass:CanSlide()
     if self.isSliding then return false end
     if self.MomentumUnit < MomentumConfig.MIN_SLIDING_MOMENTUM then return false end
     if self.Staggered then return false end
-    if not isGrounded(self) then return false end
+    if self.TempLockSliding then return false end
+    if not self:isGrounded() then return false end
 
     return true
 end
@@ -376,7 +382,7 @@ function CharacterClass:CanWallRun()
     if time() - self.LastWallRun < WallRunConfig.WALL_RUN_CD then return false end
     if math.abs(self.WallObject.Normal.Y) >= 0.35 then return false end
     if self.FreefallSpeed < -65 then return false end
-    if isGrounded(self) then return false end
+    if self:isGrounded() then return false end
 
 
     return true
@@ -525,10 +531,8 @@ end
 --RECOVERY--
 
 function CharacterClass:CanRecoveryRoll()
-    local root = self.RootPart
-    if root.AssemblyLinearVelocity.Y > RecoveryConfig.MIN_FALL_SPEED then return false end
-    if root.AssemblyLinearVelocity.Y < RecoveryConfig.MAX_FALL_SPEED then return false end
-    if isGrounded(self) then return false end
+    if self.LastFallSpeed > RecoveryConfig.MIN_FALL_SPEED then return false end
+    if self.LastFallSpeed < RecoveryConfig.MAX_FALL_SPEED then return false end
 
     return true
 end
@@ -548,7 +552,7 @@ function CharacterClass:RecoveryRoll(timing)
 
     if timing < RecoveryConfig.PERFECT_ROLL_WINDOW then
         self:ConsumeMomentum(RecoveryConfig.PERFECT_ROLL_CONSUMPTION)
-    elseif timing > RecoveryConfig.PERFECT_ROLL_WINDOW and timing < RecoveryConfig.ROLL_WINDOW then
+    elseif timing >= RecoveryConfig.PERFECT_ROLL_WINDOW and timing <= RecoveryConfig.ROLL_WINDOW then
         self:ConsumeMomentum(RecoveryConfig.ROLL_CONSUMPTION)
     end
 
@@ -560,9 +564,7 @@ function CharacterClass:RecoveryRoll(timing)
 end
 
 function CharacterClass:JustLanded()
-    if self.Humanoid:GetState() ~= Enum.HumanoidStateType.Landed then return end
-    self.Landed = time()
-    print(self.Landed)
+    
 end
 
 
