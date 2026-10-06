@@ -2,10 +2,12 @@ local RepStorage = game:GetService("ReplicatedStorage")
 
 local ParkourConfig = require(RepStorage.Shared.Parkour.ParkourConfig)
 local BoostConfig = ParkourConfig.Boost
+local RecoveryConfg = ParkourConfig.Recovery
 
 local pRemote = RepStorage.Remotes.ParkourRemote
 local characterObject = nil
 local mb3 = 0
+local ShiftRollInput = 0
 
 
 local ParkourController = {}
@@ -15,7 +17,6 @@ function ParkourController.Init(CharInfo)
 end
 
 function ParkourController.HandleInput(input)
-    print(characterObject.isWallRunning)
     if characterObject.isWallRunning then
         if input.KeyCode == Enum.KeyCode.A then
             ParkourController.AttemptWallRedirect("A")
@@ -26,8 +27,10 @@ function ParkourController.HandleInput(input)
     
     
     if input.KeyCode == Enum.KeyCode.LeftShift then
-        if characterObject:CanRecoveryRoll() then
-            ParkourController.AttemptRoll()
+        ShiftRollInput = time()
+        local timingWindow = ShiftRollInput - characterObject.Landed
+        if characterObject:CanRecoveryRoll() and timingWindow < RecoveryConfg.ROLL_WINDOW  then
+            ParkourController.AttemptRoll(timingWindow)
         elseif characterObject:CanSlide() then
             ParkourController.AttemptSlide()
         end
@@ -87,8 +90,8 @@ function ParkourController.AttemptWallRedirect(input)
     pRemote:FireServer("WallRedirect")
 end
 
-function ParkourController.AttemptRoll()
-    characterObject:RecoveryRoll()
+function ParkourController.AttemptRoll(timing)
+    characterObject:RecoveryRoll(timing)
     pRemote:FireServer("RecoveryRoll")
 end
 

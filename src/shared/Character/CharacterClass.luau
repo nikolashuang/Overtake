@@ -474,7 +474,7 @@ function CharacterClass:EndWallRun()
     if not self.isWallRunning then
         return
     end
-    
+
     self.isWallRunning = false
     self.nowWallDrifting = false
     self.isPlayingWallDrift = false
@@ -528,11 +528,12 @@ function CharacterClass:CanRecoveryRoll()
     local root = self.RootPart
     if root.AssemblyLinearVelocity.Y > RecoveryConfig.MIN_FALL_SPEED then return false end
     if root.AssemblyLinearVelocity.Y < RecoveryConfig.MAX_FALL_SPEED then return false end
+    if isGrounded(self) then return false end
 
     return true
 end
 
-function CharacterClass:RecoveryRoll()
+function CharacterClass:RecoveryRoll(timing)
     local root = self.RootPart
 
     local currentVelocity = root.AssemblyLinearVelocity
@@ -545,9 +546,9 @@ function CharacterClass:RecoveryRoll()
     local flatLook = Vector3.new(root.CFrame.LookVector.X, 0, root.CFrame.LookVector.Z).Unit
     local forwardSpeed = math.max(currentVelocity:Dot(flatLook), RecoveryConfig.MIN_ROLL_SPEED)
 
-    if time() - self.Landed < RecoveryConfig.PERFECT_ROLL_WINDOW then
+    if timing < RecoveryConfig.PERFECT_ROLL_WINDOW then
         self:ConsumeMomentum(RecoveryConfig.PERFECT_ROLL_CONSUMPTION)
-    elseif time() - self.Landed > RecoveryConfig.PERFECT_ROLL_WINDOW and time() - self.Landed < RecoveryConfig.ROLL_WINDOW then
+    elseif timing > RecoveryConfig.PERFECT_ROLL_WINDOW and timing < RecoveryConfig.ROLL_WINDOW then
         self:ConsumeMomentum(RecoveryConfig.ROLL_CONSUMPTION)
     end
 
@@ -561,6 +562,7 @@ end
 function CharacterClass:JustLanded()
     if self.Humanoid:GetState() ~= Enum.HumanoidStateType.Landed then return end
     self.Landed = time()
+    print(self.Landed)
 end
 
 
