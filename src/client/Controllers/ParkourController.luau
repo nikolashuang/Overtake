@@ -29,8 +29,11 @@ function ParkourController.HandleInput(input)
     
     if input.KeyCode == Enum.KeyCode.LeftShift then
         ParkourController.shiftInput = time()
+        local timingWindow = ParkourController.shiftInput - characterObject.Landed
         if characterObject.TempLockSliding and characterObject:isGrounded() then
-            characterObject:RecoveryRoll(characterObject.Landed - ParkourController.shiftInput)
+            ParkourController.AttemptRoll(timingWindow)
+            characterObject.TempLockSliding = false
+            return
         end
 
         if characterObject:CanSlide() then
@@ -73,11 +76,8 @@ function ParkourController.HandleLanding(newState)
     task.delay(0.05, function()
         if characterObject:CanRecoveryRoll() and timingWindow < RecoveryConfig.ROLL_WINDOW then
             ParkourController.AttemptRoll(timingWindow)
+            characterObject.TempLockSliding = false
         end
-    end)
-
-    task.delay(0.75, function()
-        characterObject.TempLockSliding = false
     end)
 end
 

@@ -10,6 +10,7 @@ local ClientCharacter = require(RepStorage.Shared.Character.CharacterClass)
 local AnimationController = require(StarterPlr.StarterPlayerScripts.Controllers.AnimationController)
 local UIController = require(script.Parent.Controllers.UIController)
 local InputController = require(script.Parent.Controllers.InputController)
+local HumanoidController = require(script.Parent.Controllers.HumanoidController)
 
 
 local player = Players.LocalPlayer
@@ -17,11 +18,14 @@ local character = player.Character or player.CharacterAdded:Wait()
 
 AnimationController.BindCharacter(character)
 AnimationController.LoadAllTracks()
+HumanoidController.BindLandingListener(character)
 
 local characterObject = ClientCharacter.new(player, {AnimationController = AnimationController})
 characterObject:BindCharacter(character)
 
 ParkourController.Init(characterObject)
+HumanoidController.Init(ParkourController)
+
 UIController.ChangeDebugModeUI(ParkourPhysics.debugMode)
 
 
@@ -30,6 +34,7 @@ local debugUI = UIController.debugButton
 
 player.CharacterAdded:Connect(function(newCharacter)
     characterObject:BindCharacter(newCharacter)
+    HumanoidController.BindLandingListener(newCharacter)
     AnimationController.BindCharacter(newCharacter)
     AnimationController.LoadAllTracks()
 end)
@@ -47,7 +52,6 @@ end)
 
 
 RunService.PreRender:Connect(function(deltaTime)
-    characterObject:JustLanded()
     characterObject:UpdateVaultObject()
     characterObject:UpdateWallRunObj()
 
@@ -92,21 +96,4 @@ debugUI.Activated:Connect(function()
         characterObject.SlideCollider.Transparency = 0.5
     end
 end)
-
-local wasAirborne = characterObject.Humanoid.FloorMaterial == Enum.Material.Air
-characterObject.Humanoid:GetPropertyChangedSignal("FloorMaterial"):Connect(function()
-    local isAirborne = characterObject.Humanoid.FloorMaterial == Enum.Material.Air
-
-    if isAirborne then
-        wasAirborne = true
-        return
-    end
-
-    if wasAirborne then
-        wasAirborne = false
-        ParkourController.HandleLanding()
-    end
-
-end)
-
 

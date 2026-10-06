@@ -551,8 +551,10 @@ function CharacterClass:RecoveryRoll(timing)
     local forwardSpeed = math.max(currentVelocity:Dot(flatLook), RecoveryConfig.MIN_ROLL_SPEED)
 
     if timing < RecoveryConfig.PERFECT_ROLL_WINDOW then
+        print("Perfect Roll!")
         self:ConsumeMomentum(RecoveryConfig.PERFECT_ROLL_CONSUMPTION)
     elseif timing >= RecoveryConfig.PERFECT_ROLL_WINDOW and timing <= RecoveryConfig.ROLL_WINDOW then
+        print("Normal Roll")
         self:ConsumeMomentum(RecoveryConfig.ROLL_CONSUMPTION)
     end
 
@@ -562,11 +564,6 @@ function CharacterClass:RecoveryRoll(timing)
     Debris:AddItem(linVel, 0.3)
 
 end
-
-function CharacterClass:JustLanded()
-    
-end
-
 
 function CharacterClass:CanLedgeCatch()
 
