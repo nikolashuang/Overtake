@@ -10,6 +10,7 @@ local MomentumConfig = ParkourConfig.Momentum
 local BoostConfig = ParkourConfig.Boost
 local WallRunConfig = ParkourConfig.WallRun
 local RecoveryConfig = ParkourConfig.Recovery
+local ClimbConfig = ParkourConfig.Climbing
 
 local CharacterClass = {}
 
@@ -224,7 +225,7 @@ function CharacterClass:VaultOrHurdle()
     local currentVelocity = root.AssemblyLinearVelocity
     local look = root.CFrame.LookVector
     local flatLook = Vector3.new(look.X, 0, look.Z).Unit
-    local obstalceHeight = self.vaultObject.Size.Y
+    local obstalceHeight = self.traversalObj.Instance.Size.Y
 
     local forwardSpeed = math.max(currentVelocity:Dot(flatLook), VaultConfig.MIN_VAULT_SPEED)
 
@@ -573,10 +574,61 @@ function CharacterClass:CanClimb()
 end
 
 function CharacterClass:Climb()
+    local root = self.RootPart
+    local humanoid = self.Humanoid
+
+    humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
+
+    local wallNoraml = self.traversalObj.Normal
+
+    local align = Instance.new("AlignOrientation")
+    align.Attachment0 = self.MovementAttachment
+    align.Mode = Enum.OrientationAlignmentMode.OneAttachment
+    align.RigidityEnabled = true
+    align.Parent = root
+
+    local linVel = Instance.new("LinearVelocity")
+    linVel.Attachment0 = self.MovementAttachment
+    linVel.RelativeTo = Enum.ActuatorRelativeTo.World
+    linVel.ForceLimitsEnabled = false
+    linVel.Parent = root
+
+    local look = root.CFrame.LookVector
+    local flatLook = Vector3.new(look.X, 0, look.Z).Unit
+
+    linVel.VectorVelocity = (Vector3.yAxis * ClimbConfig.NORMAL_CLIMB_SPEED) + (-wallNoraml * ClimbConfig.SOFT_PUSH_PRESSURE)
+    align.CFrame = CFrame.lookAt(Vector3.zero, flatLook)
+
+    Debris:AddItem(linVel, 0.75)
+    Debris:AddItem(align, 0.75)
+
+    task.delay(0.5, function()
+        humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
+    end)
 
 end
 
 function CharacterClass:ExtendedClimbBoost()
+    local root = self.RootPart
+    local humanoid = self.Humanoid
+
+    humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
+
+    local wallNormal = self.traversalObj.Normal
+
+    local linVel = Instance.new("LinearVelocity")
+    linVel.Attachment0 = self.MovementAttachment
+    linVel.RelativeTo = Enum.ActuatorRelativeTo.World
+    linVel.ForceLimitsEnabled = false
+    linVel.Parent = root
+
+    linVel.VectorVelocity = (Vector3.yAxis * ClimbConfig.EXTENDED_BOOST_SPEED) + (wallNormal * ClimbConfig.SOFT_PUSH_PRESSURE)
+
+    Debris:AddItem(linVel, 0.25)
+
+    task.delay(0.5, function()
+        humanoid:SetStateEnable(Enum.HumanoidStateType.Jumping, true)
+    end)
 
 end
 

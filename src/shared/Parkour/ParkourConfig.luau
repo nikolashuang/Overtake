@@ -49,6 +49,12 @@ local ParkourConfig = {
         PERFECT_ROLL_CONSUMPTION = 25,
         ROLL_CONSUMPTION = 40,
         MIN_ROLL_SPEED = 20,
+    },
+
+    Climbing = {
+        NORMAL_CLIMB_SPEED = 15,
+        EXTENDED_BOOST_SPEED = 40,
+        SOFT_PUSH_PRESSURE = 5,
     }
 
 

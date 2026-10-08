@@ -4,7 +4,7 @@ local StarterPlr = game:GetService("StarterPlayer")
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 
-local ParkourPhysics = require(RepStorage.Shared.Parkour.ParkourPhysics)
+local ParkourDetection = require(RepStorage.Shared.Parkour.ParkourDetection)
 local ParkourController = require(script.Parent.Controllers.ParkourController)
 local ClientCharacter = require(RepStorage.Shared.Character.CharacterClass)
 local AnimationController = require(StarterPlr.StarterPlayerScripts.Controllers.AnimationController)
@@ -26,7 +26,7 @@ characterObject:BindCharacter(character)
 ParkourController.Init(characterObject)
 HumanoidController.Init(ParkourController)
 
-UIController.ChangeDebugModeUI(ParkourPhysics.debugMode)
+UIController.ChangeDebugModeUI(ParkourDetection.debugMode)
 
 
 local debugUI = UIController.debugButton
@@ -52,7 +52,7 @@ end)
 
 
 RunService.PreRender:Connect(function(deltaTime)
-    characterObject:UpdateVaultObject()
+    characterObject:UpdateObject()
     characterObject:UpdateWallRunObj()
 
     if characterObject.isWallRunning then
@@ -87,10 +87,10 @@ end)
 --MISCELLANEOUS--
 
 debugUI.Activated:Connect(function()
-    ParkourPhysics.debugMode = not ParkourPhysics.debugMode
-    UIController.ChangeDebugModeUI(ParkourPhysics.debugMode)
-    if ParkourPhysics.debugMode == false then
-        ParkourPhysics.DestroyRaycastBeams(character)
+    ParkourDetection.debugMode = not ParkourDetection.debugMode
+    UIController.ChangeDebugModeUI(ParkourDetection.debugMode)
+    if ParkourDetection.debugMode == false then
+        ParkourDetection.DestroyRaycastBeams(character)
         characterObject.SlideCollider.Transparency = 1
     else
         characterObject.SlideCollider.Transparency = 0.5

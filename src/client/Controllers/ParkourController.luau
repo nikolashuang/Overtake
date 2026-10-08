@@ -30,7 +30,7 @@ function ParkourController.HandleInput(input)
     if input.KeyCode == Enum.KeyCode.LeftShift then
         ParkourController.shiftInput = time()
         local timingWindow = ParkourController.shiftInput - characterObject.Landed
-        if characterObject.TempLockSliding and characterObject:isGrounded() and timingWindow < RecoveryConfig.ROLL_WINDOW then
+        if characterObject.TempLockSliding and characterObject:isGrounded() and characterObject:CanRecoveryRoll() and timingWindow < RecoveryConfig.ROLL_WINDOW then
             ParkourController.AttemptRoll(timingWindow)
             characterObject.TempLockSliding = false
             return
@@ -54,6 +54,11 @@ function ParkourController.HandleSpaceInput()
         return
     elseif characterObject.isWallRunning then
         characterObject:EndWallRun()
+        return
+    end
+    
+    if characterObject:CanClimb() then
+        ParkourController.AttemptClimb()
         return
     end
 
@@ -117,5 +122,9 @@ function ParkourController.AttemptRoll(timing)
     pRemote:FireServer("RecoveryRoll")
 end
 
+function ParkourController.AttemptClimb()
+    characterObject:Climb()
+    pRemote:FireServer("Climb")
+end
 
 return ParkourController

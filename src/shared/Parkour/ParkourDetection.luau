@@ -95,7 +95,7 @@ function ParkourDetection.DetectObstacle(character, vaultDistance)
 	local stableHeadOffset = Vector3.new(0, 1.8, 0)
 	local stableRootOffset = Vector3.new(0, -0.6, 0)
     local stableKneeOffset = Vector3.new(0, -2, 0)
-    local stableClimbOffset = stableHeadOffset + Vector3.new(0, 0.5, 0)
+    local stableClimbOffset = stableHeadOffset + Vector3.new(0, 1.2, 0)
     local stableHeadPosition = root.CFrame:PointToWorldSpace(stableHeadOffset)
 	local stableRootPosition = root.CFrame:PointToWorldSpace(stableRootOffset)
     local stableKneePosition = root.CFrame:PointToWorldSpace(stableKneeOffset)
@@ -116,27 +116,27 @@ function ParkourDetection.DetectObstacle(character, vaultDistance)
         debugVaultBeams.debugWaistBeam.Position = localMoveDirection + stableRootOffset
         debugVaultBeams.debugHeadBeam.Position = localMoveDirection + stableHeadOffset
         debugVaultBeams.debugKneeBeam.Position = localMoveDirection + stableKneeOffset
-        debugVaultBeams.debugClimbBeam.Position = localMoveDirection + stableClimbOffset
+        debugVaultBeams.debugClimbBeam.Position = Vector3.new(0, 0, -3) + stableClimbOffset
     end
 
 
     local waistDetection = validateHit(workspace:Raycast(stableRootPosition, root.CFrame.LookVector * VAULT_DISTANCE, params))
     local headDetection = validateHit(workspace:Raycast(stableHeadPosition, root.CFrame.LookVector * VAULT_DISTANCE, params))
     local kneeDetection = validateHit(workspace:Raycast(stableKneePosition, root.CFrame.LookVector * VAULT_DISTANCE, params))
-    local climbDetection = validateHit(workspace:Raycast(stableClimbPosition, root.CFrame.LookVector * VAULT_DISTANCE, params))
+    local climbDetection = validateHit(workspace:Raycast(stableClimbPosition, root.CFrame.LookVector * 3, params))
 
     local waistBelow = waistDetection and kneeDetection
 
     if (waistDetection or waistBelow) and headDetection and climbDetection then 
-        return climbDetection.Instance, "Climb"
+        return climbDetection, "Climb"
     elseif (waistDetection or waistBelow) and headDetection and not climbDetection then
-        return headDetection.Instance, "LedgeCatch"
+        return headDetection, "LedgeCatch"
     end
 
     if waistDetection then
-        return waistDetection.Instance, "Vault"
+        return waistDetection, "Vault"
     elseif not waistDetection and kneeDetection then
-        return kneeDetection.Instance, "Hurdle"
+        return kneeDetection, "Hurdle"
     end
 
     return nil
