@@ -2,7 +2,7 @@ local RepStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local Debris = game:GetService("Debris")
 
-local ParkourPhysics = require(RepStorage.Shared.Parkour.ParkourPhysics)
+local ParkourDetection = require(RepStorage.Shared.Parkour.ParkourDetection)
 local ParkourConfig = require(RepStorage.Shared.Parkour.ParkourConfig)
 
 local VaultConfig = ParkourConfig.Vault
@@ -41,9 +41,7 @@ function CharacterClass.new(player, system)
     self.Stationary = 0
     self.traversalType = nil
 
-
-    self.ableVault = false
-    self.vaultObject = nil
+    self.traversalObj = nil
     self.SlideDirection = nil
     self.isSliding = false
     self.TempLockSliding = false
@@ -57,6 +55,7 @@ function CharacterClass.new(player, system)
     self.WallRunSpeed = nil
     self.InWallRunTime = 0
     self.isPlayingWallDrift = false
+    self.WallRunCD = WallRunConfig.WALL_RUN_CD
 
     self.LastLunge = 0
     self.LastVault = 0
@@ -103,7 +102,7 @@ function CharacterClass:BindCharacter(character)
         self.SlideCollider.Position = self.RootPart.Position + Vector3.new(0, -2, 0)
         self.SlideCollider.Size = Vector3.new(3.75, 2, 2.5)
 
-        if ParkourPhysics.debugMode == false then
+        if ParkourDetection.debugMode == false then
             self.SlideCollider.Transparency = 1
         else
             self.SlideCollider.Transparency = 0.5
@@ -182,21 +181,22 @@ function CharacterClass:ChangeSlideCollision()
     self.SlideCollider.CanCollide = self.isSliding
 end
 
---VAULTING--
-
-function CharacterClass:UpdateVaultObject()
+function CharacterClass:UpdateObject()
+    --Too lazy to change all variable names but Vault Distance is now any Forward Traversal distance
     local momentumPercent = math.clamp((self.MomentumUnit / MomentumConfig.MAX_MOMENTUM), 0, 1)
     local vaultDistance = VaultConfig.MIN_VAULT_DISTANCE + (VaultConfig.MAX_VAULT_DISTANCE - VaultConfig.MIN_VAULT_DISTANCE) * momentumPercent
 
-    local vaultObjData, traversalType = ParkourPhysics.DetectObstacle(self.Character, vaultDistance)
+    local traversalObj, traversalType = ParkourDetection.DetectObstacle(self.Character, vaultDistance)
     
-    self.vaultObject = vaultObjData
+    self.traversalObj = traversalObj
     self.traversalType = traversalType
-    self.ableVault = vaultObjData ~= nil
 end
 
+
+--VAULTING--
+
 function CharacterClass:CanVault()
-    if not self.ableVault then return false end
+    if self.traversalType ~= "Vault" and self.traversalType ~= "Hurdle" then return false end
     if self.Staggered then return false end
     if not self:isGrounded() then return false end
     if time() - self.LastVault < VaultConfig.VAULT_CD then return false end
@@ -366,7 +366,7 @@ end
 
 function CharacterClass:UpdateWallRunObj()
     local wallDetectionDistance = WallRunConfig.MAX_WALL_ATTACH_DISTANCE
-    local wallobj, direction = ParkourPhysics.DetectWallRuns(self.Character, wallDetectionDistance)
+    local wallobj, direction = ParkourDetection.DetectWallRuns(self.Character, wallDetectionDistance)
 
     self.WallObject = wallobj
     self.WallDirection = direction
@@ -379,11 +379,10 @@ function CharacterClass:CanWallRun()
     if self.Staggered then return false end
     if not self.ableWallRun then return false end
     if self.MomentumUnit < WallRunConfig.MIN_WALLRUN_MOMENTUM then return false end
-    if time() - self.LastWallRun < WallRunConfig.WALL_RUN_CD then return false end
+    if time() - self.LastWallRun < self.WallRunCD then return false end
     if math.abs(self.WallObject.Normal.Y) >= 0.35 then return false end
     if self.FreefallSpeed < -65 then return false end
     if self:isGrounded() then return false end
-
 
     return true
 end
@@ -397,6 +396,8 @@ function CharacterClass:StartWallRun()
 
     self.isWallRunning = true
     self.HaltMomentum = true
+    self.WallRunCD = WallRunConfig.WALL_RUN_CD
+
 
     self.WallRunAlignment = Instance.new("AlignOrientation")
     self.WallRunAlignment.Attachment0 = self.MovementAttachment
@@ -518,7 +519,7 @@ function CharacterClass:WallRedirect(inputKey)
         return
     end
 
-    WallRunConfig.WALL_RUN_CD = 0 --refresh cd on wallredirect
+    self.WallRunCD = 0--refresh cd on wallredirect
     linVel.Parent = root
 
     Debris:AddItem(linVel, 0.3)
@@ -551,10 +552,8 @@ function CharacterClass:RecoveryRoll(timing)
     local forwardSpeed = math.max(currentVelocity:Dot(flatLook), RecoveryConfig.MIN_ROLL_SPEED)
 
     if timing < RecoveryConfig.PERFECT_ROLL_WINDOW then
-        print("Perfect Roll!")
         self:ConsumeMomentum(RecoveryConfig.PERFECT_ROLL_CONSUMPTION)
     elseif timing >= RecoveryConfig.PERFECT_ROLL_WINDOW and timing <= RecoveryConfig.ROLL_WINDOW then
-        print("Normal Roll")
         self:ConsumeMomentum(RecoveryConfig.ROLL_CONSUMPTION)
     end
 
@@ -565,8 +564,27 @@ function CharacterClass:RecoveryRoll(timing)
 
 end
 
-function CharacterClass:CanLedgeCatch()
+function CharacterClass:CanClimb()
+    if self.traversalType ~= "Climb" then return end
+    if self.Staggered then return end
 
+
+    return true
+end
+
+function CharacterClass:Climb()
+
+end
+
+function CharacterClass:ExtendedClimbBoost()
+
+end
+
+function CharacterClass:CanLedgeCatch()
+    if self.traversalType ~= "LedgeCatch" then return end
+    if self.Staggered then return end
+
+    return true
 end
 
 

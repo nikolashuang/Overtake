@@ -35,12 +35,13 @@ Momentum is the central movement resource. Movement techniques can preserve, con
 - Waist-level vault: fast and smooth; favor stable forward velocity.
 - Head-only / taller traversal: mantle-like, with more upward movement and a Momentum cost.
 
-## Wall Hop / Wall Boosting
-- Wall hops help gain height while scaling a wall.
-- Correct tethered technique can outperform a normal hop.
-- Quickly rotating the camera roughly 90 degrees as part of the technique may create a considerable boost.
-- Ordinary wall hops consume Momentum.
-- Successful wall boosting preserves Momentum.
+## Climbing / Extended Climbing
+- Climbing helps gain limited height while scaling a wall.
+- Normal climbing provides controlled upward movement before the player begins to lose their grip.
+- Extended Climbing can be mechanically input while climbing to gain a considerable upward boost.
+- Players can Extended Climb up to twice before being forced off the wall.
+- After an Extended Climb, the player returns to normal climbing.
+- Correctly timing Extended Climbs can considerably increase the total height reached.
 
 Exact timing and exploit-resistant implementation are undecided.
 
