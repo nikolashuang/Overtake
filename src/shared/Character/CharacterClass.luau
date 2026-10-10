@@ -58,10 +58,15 @@ function CharacterClass.new(player, system)
     self.isPlayingWallDrift = false
     self.WallRunCD = WallRunConfig.WALL_RUN_CD
 
+    self.isClimbing = false
+    self.ClimbingAConsumed = false
+    self.ClimbingDConsumed = false
+
     self.LastLunge = 0
     self.LastVault = 0
     self.LastWallRun = 0
     self.LastSlide = 0
+    self.LastClimb = 0
     self.LastFallSpeed = 0
     self.Landed = 0
 
@@ -566,8 +571,10 @@ function CharacterClass:RecoveryRoll(timing)
 end
 
 function CharacterClass:CanClimb()
-    if self.traversalType ~= "Climb" then return end
-    if self.Staggered then return end
+    if self.traversalType ~= "Climb" then return false end
+    if self.LastFallSpeed <= ClimbConfig.MIN_FALL_SPEED_TO_CLIMB then return false end
+    if time() - self.LastClimb < ClimbConfig.CLIMB_CD then return false end
+    if self.Staggered then return false end
 
 
     return true
@@ -576,6 +583,8 @@ end
 function CharacterClass:Climb()
     local root = self.RootPart
     local humanoid = self.Humanoid
+
+    self.isClimbing = true
 
     humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
 
@@ -602,17 +611,16 @@ function CharacterClass:Climb()
     Debris:AddItem(linVel, 0.75)
     Debris:AddItem(align, 0.75)
 
+    self.LastClimb = time()
+
     task.delay(0.5, function()
         humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
     end)
 
 end
 
-function CharacterClass:ExtendedClimbBoost()
+function CharacterClass:ExtendedClimbBoost(sidewayInput)
     local root = self.RootPart
-    local humanoid = self.Humanoid
-
-    humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
 
     local wallNormal = self.traversalObj.Normal
 
@@ -622,14 +630,17 @@ function CharacterClass:ExtendedClimbBoost()
     linVel.ForceLimitsEnabled = false
     linVel.Parent = root
 
-    linVel.VectorVelocity = (Vector3.yAxis * ClimbConfig.EXTENDED_BOOST_SPEED) + (wallNormal * ClimbConfig.SOFT_PUSH_PRESSURE)
+    if not self.ClimbingAConsumed and not self.ClimbingDConsumed then
+        linVel.VectorVelocity = (Vector3.yAxis * ClimbConfig.EXTENDED_BOOST_SPEED) + (wallNormal * ClimbConfig.SOFT_PUSH_PRESSURE)
+    end
+
+    if sidewayInput == "A" then
+        self.ClimbingAConsumed = true
+    elseif sidewayInput == "D" then
+        self.ClimbingDConsumed = true
+    end
 
     Debris:AddItem(linVel, 0.25)
-
-    task.delay(0.5, function()
-        humanoid:SetStateEnable(Enum.HumanoidStateType.Jumping, true)
-    end)
-
 end
 
 function CharacterClass:CanLedgeCatch()

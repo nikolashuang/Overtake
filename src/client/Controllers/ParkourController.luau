@@ -3,11 +3,13 @@ local RepStorage = game:GetService("ReplicatedStorage")
 local ParkourConfig = require(RepStorage.Shared.Parkour.ParkourConfig)
 local BoostConfig = ParkourConfig.Boost
 local RecoveryConfig = ParkourConfig.Recovery
+local ClimbConfig = ParkourConfig.Climbing
 
 local pRemote = RepStorage.Remotes.ParkourRemote
 local characterObject = nil
 local mb3 = 0
-
+local aInput = 0
+local dInput = 0
 
 local ParkourController = {}
 
@@ -24,6 +26,12 @@ function ParkourController.HandleInput(input)
         elseif input.KeyCode == Enum.KeyCode.D then
             ParkourController.AttemptWallRedirect("D")
         end
+    end
+
+    if input.KeyCode == Enum.KeyCode.A then
+        aInput = time()
+    elseif input.KeyCode == Enum.KeyCode.D then
+        dInput = time()
     end
     
     
@@ -56,7 +64,16 @@ function ParkourController.HandleSpaceInput()
         characterObject:EndWallRun()
         return
     end
-    
+
+    if characterObject.isClimbing then
+        if time() - aInput < ClimbConfig.SIDEWAY_INPUT_WINDOW then
+            ParkourController.AttemptExtendedClimb("A")
+        elseif time() - dInput < ClimbConfig.SIDEWAY_INPUT_WINDOW then
+            ParkourController.AttemptExtendedClimb("D")
+        end
+        return
+    end
+
     if characterObject:CanClimb() then
         ParkourController.AttemptClimb()
         return
@@ -88,6 +105,12 @@ function ParkourController.HandleLanding(newState)
     task.delay(0.75, function()
         characterObject.TempLockSliding = false
     end)
+end
+
+function ParkourController.RefreshClimbConsumption()
+    characterObject.ClimbingAConsumed = false
+    characterObject.ClimbingDConsumed = false
+    characterObject.isClimbing = false
 end
 
 
@@ -125,6 +148,11 @@ end
 function ParkourController.AttemptClimb()
     characterObject:Climb()
     pRemote:FireServer("Climb")
+end
+
+function ParkourController.AttemptExtendedClimb(input)
+    characterObject:ExtendedClimbBoost(input)
+    pRemote:FireServer("ExtendedClimb")
 end
 
 return ParkourController

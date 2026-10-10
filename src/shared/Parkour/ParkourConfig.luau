@@ -55,6 +55,10 @@ local ParkourConfig = {
         NORMAL_CLIMB_SPEED = 15,
         EXTENDED_BOOST_SPEED = 40,
         SOFT_PUSH_PRESSURE = 5,
+        MIN_FALL_SPEED_TO_CLIMB = -65,
+        CLIMB_CD = 0.75,
+        SIDEWAY_INPUT_WINDOW = 0.2,
+        EXTENDED_BOOST_WINDOW = 0.3,
     }
 
 

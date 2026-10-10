@@ -17,6 +17,10 @@ function HumanoidController.BindLandingListener(character)
     local wasAirborne = humanoid.FloorMaterial == Enum.Material.Air
 
     listener = humanoid:GetPropertyChangedSignal("FloorMaterial"):Connect(function()
+        if humanoid.FloorMaterial ~= Enum.Material.Air then
+            ParkourController.RefreshClimbConsumption()
+        end
+
         local isAirborne = humanoid.FloorMaterial == Enum.Material.Air
 
         if isAirborne then
