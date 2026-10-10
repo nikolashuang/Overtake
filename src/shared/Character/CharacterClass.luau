@@ -610,8 +610,8 @@ function CharacterClass:Climb()
     linVel.VectorVelocity = (Vector3.yAxis * ClimbConfig.NORMAL_CLIMB_SPEED) + (-wallNoraml * ClimbConfig.SOFT_PUSH_PRESSURE)
     align.CFrame = CFrame.lookAt(Vector3.zero, flatLook)
 
-    Debris:AddItem(linVel, 0.75)
-    Debris:AddItem(align, 0.75)
+    Debris:AddItem(linVel, 0.5)
+    Debris:AddItem(align, 0.5)
 
     self.LastClimb = time()
 
@@ -624,7 +624,11 @@ end
 function CharacterClass:ExtendedClimbBoost(sidewayInput)
     local root = self.RootPart
 
-    if self.ClimbingAConsumed and self.ClimbingDConsumed then return end
+    if self.ClimbingAConsumed and sidewayInput == "A" then
+        return
+    elseif self.ClimbingDConsumed and sidewayInput == "D" then
+        return
+    end
 
     local wallNormal = self.traversalObj.Normal
 
@@ -634,9 +638,9 @@ function CharacterClass:ExtendedClimbBoost(sidewayInput)
     linVel.ForceLimitsEnabled = false
     linVel.Parent = root
 
-    if not self.ClimbingAConsumed then
+    if not self.ClimbingAConsumed and sidewayInput == "A" then
         linVel.VectorVelocity = (root.CFrame.UpVector * ClimbConfig.EXTENDED_BOOST_SPEED) + (wallNormal * ClimbConfig.SOFT_PUSH_PRESSURE)
-    elseif not self.ClimbingDConsumed then
+    elseif not self.ClimbingDConsumed and sidewayInput == "D" then
         linVel.VectorVelocity = (root.CFrame.UpVector * ClimbConfig.EXTENDED_BOOST_SPEED) + (wallNormal * ClimbConfig.SOFT_PUSH_PRESSURE)
     end
     
