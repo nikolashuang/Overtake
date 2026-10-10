@@ -584,6 +584,8 @@ function CharacterClass:Climb()
     local root = self.RootPart
     local humanoid = self.Humanoid
 
+    if self.isClimbing then return end
+
     self.isClimbing = true
 
     humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
@@ -622,6 +624,8 @@ end
 function CharacterClass:ExtendedClimbBoost(sidewayInput)
     local root = self.RootPart
 
+    if self.ClimbingAConsumed and self.ClimbingDConsumed then return end
+
     local wallNormal = self.traversalObj.Normal
 
     local linVel = Instance.new("LinearVelocity")
@@ -630,9 +634,7 @@ function CharacterClass:ExtendedClimbBoost(sidewayInput)
     linVel.ForceLimitsEnabled = false
     linVel.Parent = root
 
-    if not self.ClimbingAConsumed and not self.ClimbingDConsumed then
-        linVel.VectorVelocity = (Vector3.yAxis * ClimbConfig.EXTENDED_BOOST_SPEED) + (wallNormal * ClimbConfig.SOFT_PUSH_PRESSURE)
-    end
+    linVel.VectorVelocity = (root.CFrame.UpVector * ClimbConfig.EXTENDED_BOOST_SPEED) + (wallNormal * ClimbConfig.SOFT_PUSH_PRESSURE)
 
     if sidewayInput == "A" then
         self.ClimbingAConsumed = true
