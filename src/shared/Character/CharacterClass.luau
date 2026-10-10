@@ -634,8 +634,12 @@ function CharacterClass:ExtendedClimbBoost(sidewayInput)
     linVel.ForceLimitsEnabled = false
     linVel.Parent = root
 
-    linVel.VectorVelocity = (root.CFrame.UpVector * ClimbConfig.EXTENDED_BOOST_SPEED) + (wallNormal * ClimbConfig.SOFT_PUSH_PRESSURE)
-
+    if not self.ClimbingAConsumed then
+        linVel.VectorVelocity = (root.CFrame.UpVector * ClimbConfig.EXTENDED_BOOST_SPEED) + (wallNormal * ClimbConfig.SOFT_PUSH_PRESSURE)
+    elseif not self.ClimbingDConsumed then
+        linVel.VectorVelocity = (root.CFrame.UpVector * ClimbConfig.EXTENDED_BOOST_SPEED) + (wallNormal * ClimbConfig.SOFT_PUSH_PRESSURE)
+    end
+    
     if sidewayInput == "A" then
         self.ClimbingAConsumed = true
     elseif sidewayInput == "D" then
