@@ -73,8 +73,16 @@ RunService.PostSimulation:Connect(function(deltaTime)
     if InputController.MaintainSlideInput() and characterObject.isSliding and characterObject.MomentumUnit > 0 then
         characterObject:SlideDecay(deltaTime)
         characterObject.currentMovementAnim = "SlideAnim"
-    else
+    elseif (not InputController.MaintainSlideInput() or characterObject.MomentumUnit <= 0) and characterObject.isSliding then
         characterObject:EndSlide()
+    end
+
+    if not characterObject.isCrawling and characterObject.overHangExists and not characterObject.isSliding then
+        print(characterObject.isCrawling)
+        characterObject:EnterCrawl()
+    elseif not characterObject.overHangExists and characterObject.isCrawling then
+        print(characterObject.isCrawling)
+        characterObject:CancelCrawl()
     end
 end)
 

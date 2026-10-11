@@ -48,6 +48,8 @@ function CharacterClass.new(player, system)
     self.isSliding = false
     self.TempLockSliding = false
     self.isCrawling = false
+    self.isPlayingCrouch = false
+    self.isPlayingCrouchMove = false
 
     self.ableWallRun = false
     self.WallObject = nil
@@ -126,22 +128,30 @@ function CharacterClass:UpdateMomentum(deltaTime)
     local isMoving = self.Humanoid.MoveDirection.Magnitude > 0
     self.Humanoid.WalkSpeed = MomentumConfig.MIN_MOVE_SPEED
 
-    if self.HaltMomentum then
-        self.Stationary = 0
+    if not self.isCrawling then
 
-    elseif isMoving then
-        self.Stationary = 0
-        self.MomentumUnit = math.min(MomentumConfig.MAX_MOMENTUM, self.MomentumUnit + self.RisingMomentum * deltaTime)
-        self.RisingMomentum = math.min(MomentumConfig.MAX_RISING_MOMENTUM, self.RisingMomentum + 12 * deltaTime)
-    else
-        self.Stationary += deltaTime
-        if self.Stationary >= 1 and self.MomentumUnit > MomentumConfig.MIN_MOMENTUM then
-            self.MomentumUnit = math.max(MomentumConfig.MIN_MOMENTUM, self.MomentumUnit - 50 * deltaTime)
-            self.RisingMomentum = MomentumConfig.MIN_RISING_MOMENTUM
+        if self.HaltMomentum then
+            self.Stationary = 0
+        
+        elseif isMoving and not self.isCrawling then
+            self.Stationary = 0
+            self.MomentumUnit = math.min(MomentumConfig.MAX_MOMENTUM, self.MomentumUnit + self.RisingMomentum * deltaTime)
+            self.RisingMomentum = math.min(MomentumConfig.MAX_RISING_MOMENTUM, self.RisingMomentum + 12 * deltaTime)
+        else
+            self.Stationary += deltaTime
+            if self.Stationary >= 1 and self.MomentumUnit > MomentumConfig.MIN_MOMENTUM then
+                self.MomentumUnit = math.max(MomentumConfig.MIN_MOMENTUM, self.MomentumUnit - 50 * deltaTime)
+                self.RisingMomentum = MomentumConfig.MIN_RISING_MOMENTUM
+            end
         end
+
+        self.Humanoid.WalkSpeed += (self.MomentumUnit * 0.25)
+        return
     end
 
-    self.Humanoid.WalkSpeed += (self.MomentumUnit * 0.25)
+    self.Humanoid.WalkSpeed = 5
+    self.MomentumUnit = 0
+    self.RisingMomentum = 0
 end
 
 function CharacterClass:UpdateVelocities()
@@ -179,14 +189,14 @@ local slidePartsCollision = {
     LowerLeftLeg = false
 }
 
-function CharacterClass:ChangeSlideCollision()
+function CharacterClass:ChangeSlideCollision(enabled)
     for _, part in pairs(self.Character:GetChildren()) do
         if part:IsA("Part") and part ~= self.SlideCollider and not slidePartsCollision[part.Name] then
-            part.CanCollide = not self.isSliding
+            part.CanCollide = not enabled
         end
     end
 
-    self.SlideCollider.CanCollide = self.isSliding
+    self.SlideCollider.CanCollide = enabled
 end
 
 function CharacterClass:UpdateObject()
@@ -346,22 +356,22 @@ function CharacterClass:Slide()
     self.HaltMomentum = true
     self.LastSlide = time()
 
-    self:ChangeSlideCollision()
+    self:ChangeSlideCollision(true)
 
     self.AnimationController.PlayAnimation("ParkourAnims", "SlideAnim")
 end
 
 function CharacterClass:EndSlide()
-    if time() - self.LastSlide < 0.25 then
-        task.wait(0.75)
-    end
-    
     self.isSliding = false
     self.Humanoid.AutoRotate = true
     self.SlideDirection = nil
     self.HaltMomentum = false
 
-    self:ChangeSlideCollision()
+    if not self.overHangExists then
+        self:ChangeSlideCollision(false)
+    else
+        self.isCrawling = true
+    end
 
     self.AnimationController.StopAnimation("ParkourAnims", "SlideAnim")
 end
@@ -370,20 +380,19 @@ function CharacterClass:SlideDecay(deltaTime)
     self:ConsumeMomentum(MomentumConfig.SLIDING_CONSUMPTION_DECAY, deltaTime)
 end
 
-function CharacterClass:CrawlMode()
-    self.isCrawling = true
-    self:ChangeSlideCollision()
-
-end
-
 function CharacterClass:CheckOverHang()
-    local overHang = ParkourDetection.DetectSlideOverHang(self.Character, 3)
-    if not self:isGrounded() or not overHang then 
+    local overHang = ParkourDetection.DetectSlideOverHang(self.Character, 1.5)
+    if not overHang then 
         self.overHangExists = false
         return
     end
 
     self.overHangExists = true
+end
+
+function CharacterClass:CancelCrawl()
+    self.isCrawling = false
+    self:ChangeSlideCollision(false)
 end
 
 ---------------------------------------------------------------------------------------------------
