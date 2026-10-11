@@ -43,9 +43,11 @@ function CharacterClass.new(player, system)
     self.traversalType = nil
 
     self.traversalObj = nil
+    self.overHangExists = nil
     self.SlideDirection = nil
     self.isSliding = false
     self.TempLockSliding = false
+    self.isCrawling = false
 
     self.ableWallRun = false
     self.WallObject = nil
@@ -204,6 +206,7 @@ end
 function CharacterClass:CanVault()
     if self.traversalType ~= "Vault" and self.traversalType ~= "Hurdle" then return false end
     if self.Staggered then return false end
+    if self.isCrawling then return false end
     if not self:isGrounded() then return false end
     if time() - self.LastVault < VaultConfig.VAULT_CD then return false end
     
@@ -271,10 +274,11 @@ end
 --BOOSTING--
 
 function CharacterClass:CanLunge()
-    if self.MomentumUnit < 25 then return end
-    if self.Staggered then return end
-    if time() - self.LastLunge < BoostConfig.LUNGE_CD then return end
-    if self.Humanoid:GetState() == Enum.HumanoidStateType.Freefall then return end
+    if self.MomentumUnit < 25 then return false end
+    if self.Staggered then return false end
+    if self.isCrawling  then return false end
+    if time() - self.LastLunge < BoostConfig.LUNGE_CD then return false end
+    if self.Humanoid:GetState() == Enum.HumanoidStateType.Freefall then return false end
 
     return true
 end
@@ -366,6 +370,22 @@ function CharacterClass:SlideDecay(deltaTime)
     self:ConsumeMomentum(MomentumConfig.SLIDING_CONSUMPTION_DECAY, deltaTime)
 end
 
+function CharacterClass:CrawlMode()
+    self.isCrawling = true
+    self:ChangeSlideCollision()
+
+end
+
+function CharacterClass:CheckOverHang()
+    local overHang = ParkourDetection.DetectSlideOverHang(self.Character, 3)
+    if not self:isGrounded() or not overHang then 
+        self.overHangExists = false
+        return
+    end
+
+    self.overHangExists = true
+end
+
 ---------------------------------------------------------------------------------------------------
 
 --WALL RUN--
@@ -383,6 +403,7 @@ end
 
 function CharacterClass:CanWallRun()
     if self.Staggered then return false end
+    if self.isCrawling then return false end
     if not self.ableWallRun then return false end
     if self.MomentumUnit < WallRunConfig.MIN_WALLRUN_MOMENTUM then return false end
     if time() - self.LastWallRun < self.WallRunCD then return false end
@@ -575,6 +596,7 @@ function CharacterClass:CanClimb()
     if self.LastFallSpeed <= ClimbConfig.MIN_FALL_SPEED_TO_CLIMB then return false end
     if time() - self.LastClimb < ClimbConfig.CLIMB_CD then return false end
     if self.Staggered then return false end
+    if self.isCrawling then return false end
 
 
     return true

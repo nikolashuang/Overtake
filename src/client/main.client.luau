@@ -54,6 +54,7 @@ end)
 RunService.PreRender:Connect(function(deltaTime)
     characterObject:UpdateObject()
     characterObject:UpdateWallRunObj()
+    characterObject:CheckOverHang()
 
     if characterObject.isWallRunning then
         characterObject:UpdateWallRun(InputController.isKeyDown("W"), deltaTime)

@@ -18,6 +18,9 @@ local debugWallRunBeams = {
     debugKneeLeftBeam = nil
 }
 
+local debugCrawlBeam = {
+    debugHeadBeamUp =  nil
+}
 
 
 local function CreateRaycastBeam(parentPart, startPosition)
@@ -197,6 +200,39 @@ function ParkourDetection.DetectWallRuns(character, attachDistance)
 
 
     return nil
+end
+
+function ParkourDetection.DetectSlideOverHang(character, overhangDistance)
+    local root = character:FindFirstChild("HumanoidRootPart")
+    local humanoid = character:FindFirstChild("Humanoid")
+
+    if not root and not humanoid then return end
+
+    local OVERHANG_DISTANCE = overhangDistance
+
+    local params = RaycastParams.new()
+    params.FilterType = Enum.RaycastFilterType.Exclude
+    params.FilterDescendantsInstances = {character}
+
+    local stableHeadOffset = Vector3.new(0, 1.8, 0)
+    local stableHeadPosition = root.CFrame:PointToWorldSpace(stableHeadOffset)
+
+    if ParkourDetection.debugMode and next(debugCrawlBeam) == nil then
+        debugCrawlBeam.debugHeadBeamUp = CreateRaycastBeam(root, stableHeadOffset)
+    end
+
+    local upDirection = Vector3.new(0, 3, 0)
+
+    if ParkourDetection.debugMode and next(debugCrawlBeam) ~= nil then
+        debugWallRunBeams.debugHeadBeamUp.Position = upDirection + stableHeadOffset
+    end
+
+    local crawlBeamDetection = validateHit(workspace:Raycast(stableHeadPosition, root.CFrame.UpVector * OVERHANG_DISTANCE, params))
+
+    if crawlBeamDetection then
+        return true
+    end
+
 end
 
 
