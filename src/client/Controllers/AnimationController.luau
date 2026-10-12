@@ -114,6 +114,7 @@ function AnimationController.UpdateMovementAnimation(characterObject)
 
         if characterObject.isCrawling and not characterObject.isPlayingCrouch then
             characterObject.isPlayingCrouch = true
+            characterObject.isPlayingCrouchMove = false
             AnimationController.StopAnimation("MovementAnims", "CrouchMoveAnim")
             AnimationController.PlayAnimation("MovementAnims", "CrouchIdleAnim")
         end
@@ -121,13 +122,15 @@ function AnimationController.UpdateMovementAnimation(characterObject)
     end
 
     if characterObject.isCrawling then
-        if characterObject.isPlayingCrouch and not characterObject.isPlayingCrouchMove then
+        if not characterObject.isPlayingCrouchMove then
             characterObject.isPlayingCrouch = false
+            characterObject.isPlayingCrouchMove = true
             AnimationController.StopAnimation("MovementAnims", "CrouchIdleAnim")
             AnimationController.PlayAnimation("MovementAnims", "CrouchMoveAnim")
         end
         return
     else
+        characterObject.isPlayingCrouchMove = false
         AnimationController.StopAnimation("MovementAnims", "CrouchMoveAnim")
     end
 

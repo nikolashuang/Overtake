@@ -215,26 +215,31 @@ function ParkourDetection.DetectSlideOverHang(character, overhangDistance)
     params.FilterType = Enum.RaycastFilterType.Exclude
     params.FilterDescendantsInstances = {character}
 
-    local stableHeadOffset = Vector3.new(0, 0.5, 0)
-    local stableHeadPosition = root.CFrame:PointToWorldSpace(stableHeadOffset)
+    local stableRootOffset = Vector3.new(0, -1.7, 0)
+    local stableRootPosition = root.CFrame:PointToWorldSpace(stableRootOffset)
 
     if ParkourDetection.debugMode and next(debugCrawlBeam) == nil then
-        debugCrawlBeam.debugHeadBeamUp = CreateRaycastBeam(root, stableHeadOffset)
+        debugCrawlBeam.debugHeadBeamUp = CreateRaycastBeam(root, stableRootOffset)
     end
 
-    local upDirection = Vector3.new(0, 1.5, 0)
+    local upDirection = Vector3.new(0, overhangDistance, 0)
 
     if next(debugCrawlBeam) ~= nil then
-        debugCrawlBeam.debugHeadBeamUp.Position = upDirection + stableHeadOffset
+        debugCrawlBeam.debugHeadBeamUp.Position = upDirection + stableRootOffset
     end
 
-    local crawlBeamDetection = validateHit(workspace:Raycast(stableHeadPosition, root.CFrame.UpVector * OVERHANG_DISTANCE, params))
+    local crawlBeamDetection = validateHit(workspace:Raycast(stableRootPosition, root.CFrame.UpVector * OVERHANG_DISTANCE, params))
 
     if crawlBeamDetection then
         return true
     end
 
     return false
+end
+
+function ParkourDetection.DetectPreciseLedgeFrame()
+    
+
 end
 
 

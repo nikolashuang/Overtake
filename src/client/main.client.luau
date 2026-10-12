@@ -77,11 +77,7 @@ RunService.PostSimulation:Connect(function(deltaTime)
         characterObject:EndSlide()
     end
 
-    if not characterObject.isCrawling and characterObject.overHangExists and not characterObject.isSliding then
-        print(characterObject.isCrawling)
-        characterObject:EnterCrawl()
-    elseif not characterObject.overHangExists and characterObject.isCrawling then
-        print(characterObject.isCrawling)
+    if not characterObject.overHangExists and characterObject.isCrawling then
         characterObject:CancelCrawl()
     end
 end)

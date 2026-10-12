@@ -381,7 +381,7 @@ function CharacterClass:SlideDecay(deltaTime)
 end
 
 function CharacterClass:CheckOverHang()
-    local overHang = ParkourDetection.DetectSlideOverHang(self.Character, 1.5)
+    local overHang = ParkourDetection.DetectSlideOverHang(self.Character, 3.5)
     if not overHang then 
         self.overHangExists = false
         return
@@ -475,7 +475,7 @@ end
 function CharacterClass:UpdateWallRun(wInput, deltaTime)
     local root = self.RootPart
 
-    if not self.WallObject or not wInput or self.MomentumUnit < 25 then
+    if not self.WallObject or not wInput or self.MomentumUnit < 25 or self:isGrounded() then
         self:EndWallRun()
         return
     end
