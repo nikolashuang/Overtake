@@ -66,6 +66,8 @@ function CharacterClass.new(player, system)
     self.isInLedgeCatch = false
     self.ClimbingAConsumed = false
     self.ClimbingDConsumed = false
+    self.LedgeAlignPosition = nil
+    self.LedgeAlignOrientation = nil
 
     self.LastLunge = 0
     self.LastVault = 0
@@ -73,6 +75,7 @@ function CharacterClass.new(player, system)
     self.LastSlide = 0
     self.LastClimb = 0
     self.LastFallSpeed = 0
+    self.LastUpSpeed = 0
     self.Landed = 0
 
     self.currentMovementAnim = nil
@@ -91,7 +94,7 @@ function CharacterClass:BindCharacter(character)
     self.Humanoid = character:WaitForChild("Humanoid")
     self.RootPart = character:WaitForChild("HumanoidRootPart")
     self.Humanoid.WalkSpeed = MomentumConfig.MIN_MOVE_SPEED
-    self.Humanoid.JumpHeight = 3
+    self.Humanoid.JumpHeight = 1.5
 
     self.MovementAttachment = Instance.new("Attachment")
     self.MovementAttachment.Name = "MovementAttachment"
@@ -122,6 +125,13 @@ function CharacterClass:BindCharacter(character)
     else
         self.SlideCollider = self.Character:WaitForChild("SlideCollider")
     end
+
+    self.Humanoid.StateChanged:Connect(function(oldState, newState)
+        if newState == Enum.HumanoidStateType.Freefall then
+            self.LastUpSpeed = self.RootPart.AssemblyLinearVelocity.Y
+        end
+    end)
+
 end
 
 function CharacterClass:UpdateMomentum(deltaTime)
@@ -166,7 +176,7 @@ function CharacterClass:UpdateVelocities()
     if humanoid:GetState() ~= Enum.HumanoidStateType.Freefall then
         self.FreefallSpeed = 0
         self.ForwardVelocity = horizontalVelocity:Dot(look)
-        return 
+        return
     end
 
     self.FreefallSpeed = root.AssemblyLinearVelocity.Y
@@ -257,7 +267,7 @@ function CharacterClass:VaultOrHurdle()
             linVel.VectorVelocity = flatLook * (forwardSpeed + 15) + Vector3.new(0, 3, 0)
             self.AnimationController.PlayAnimation("ParkourAnims", "VaultVariant1")
         else
-            linVel.VectorVelocity = flatLook * (forwardSpeed + 15) + Vector3.new(0, 12, 0)
+            linVel.VectorVelocity = flatLook * (forwardSpeed + 15) + Vector3.new(0, 18, 0)
             self.AnimationController.PlayAnimation("ParkourAnims", "VaultVariant1")
             self:ConsumeMomentum(VaultConfig.TALL_VAULT_CONSUMPTION)
             self.HaltMomentum = true
@@ -356,7 +366,6 @@ end
 
 function CharacterClass:Slide()
     self.isSliding = true
-    self.Humanoid.AutoRotate = false
     self.SlideDirection = self.Humanoid.MoveDirection.Unit
     self.HaltMomentum = true
     self.LastSlide = time()
@@ -368,7 +377,6 @@ end
 
 function CharacterClass:EndSlide()
     self.isSliding = false
-    self.Humanoid.AutoRotate = true
     self.SlideDirection = nil
     self.HaltMomentum = false
 
@@ -433,7 +441,6 @@ function CharacterClass:StartWallRun()
     local humanoid = self.Humanoid
 
     humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
-    humanoid.AutoRotate = false
 
     self.isWallRunning = true
     self.HaltMomentum = true
@@ -513,7 +520,6 @@ function CharacterClass:UpdateWallRun(wInput, deltaTime)
     end
 
     self.WallRunAlignment.CFrame = CFrame.lookAt(Vector3.zero, tangent)
-    self.Humanoid.AutoRotate = false
 end
 
 function CharacterClass:EndWallRun()
@@ -539,7 +545,6 @@ function CharacterClass:EndWallRun()
     end
 
     humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
-    humanoid.AutoRotate = true
 end
 
 function CharacterClass:WallRedirect(inputKey)
@@ -691,7 +696,8 @@ end
 
 function CharacterClass:CanLedgeCatch()
     if self.traversalType ~= "LedgeCatch" then return false end
-    if not self:isGrounded() then return false end
+    if self:isGrounded() then return false end
+    if self.isInLedgeCatch then return false end
     if self.Staggered then return false end
 
     return true
@@ -699,23 +705,58 @@ end
 
 function CharacterClass:LedgeCatch()
     local root = self.RootPart
+    local precisePosition = self:LookForPreciseLedge()
 
-    print("function called")
-
-    if self:LookForPreciseLedge() == nil then return end
-    print("attempted LedgeCatch")
+    if precisePosition == nil then return end
 
     self.isInLedgeCatch = true
 
-    local alignPosition = Instance.new("AlignPosition")
-    alignPosition.Attachment0 = self.MovementAttachment
-    alignPosition.Mode = Enum.PositionAlignmentMode.OneAttachment
-    alignPosition.RigidityEnabled = true
-    alignPosition.Parent = root
+    self.LedgeAlignPosition = Instance.new("AlignPosition")
+    self.LedgeAlignPosition.Attachment0 = self.MovementAttachment
+    self.LedgeAlignPosition.Mode = Enum.PositionAlignmentMode.OneAttachment
+    self.LedgeAlignPosition.RigidityEnabled = true
+    self.LedgeAlignPosition.Parent = root
 
-    root.CFrame = self:LookForPreciseLedge()
-    alignPosition.Position = root.Position
+    self.LedgeAlignOrientation = Instance.new("AlignOrientation")
+    self.LedgeAlignOrientation.Attachment0 = self.MovementAttachment
+    self.LedgeAlignOrientation.Mode = Enum.OrientationAlignmentMode.OneAttachment
+    self.LedgeAlignOrientation.RigidityEnabled = true
+    self.LedgeAlignOrientation.Parent = root
+    
+    local look = root.CFrame.LookVector
+    local flatLook = Vector3.new(look.X, 0, look.Z).Unit
 
+
+    root.CFrame = precisePosition
+    self.LedgeAlignPosition.Position = root.Position
+    self.LedgeAlignOrientation.CFrame = CFrame.lookAt(Vector3.zero, flatLook)
+
+    if self.FreefallSpeed < 0 then
+        self:ConsumeMomentum(self.MomentumUnit * 0.75)
+    end
+
+end
+
+function CharacterClass:ExitLedgeCatch(input)
+    local root = self.RootPart
+
+    self.LedgeAlignOrientation:Destroy()
+    self.LedgeAlignPosition:Destroy()
+    self.isInLedgeCatch = false
+    
+    local linVel = Instance.new("LinearVelocity")
+    linVel.Parent = root
+    linVel.Attachment0 = self.MovementAttachment
+    linVel.RelativeTo = Enum.ActuatorRelativeTo.World
+    linVel.ForceLimitsEnabled = false
+
+    local look = root.CFrame.LookVector
+    local flatLook = Vector3.new(look.X, 0, look.Z).Unit
+
+    if input == "Space" then
+        linVel.VectorVelocity = flatLook * 20 + Vector3.new(0, 15, 0)
+        Debris:AddItem(linVel, 0.2)
+    end
 end
 
 

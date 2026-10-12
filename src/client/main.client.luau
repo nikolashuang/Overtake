@@ -50,14 +50,26 @@ UserInput.InputBegan:Connect(function(input, processed)
 
 end)
 
+RunService.PreRender:Connect(function()
+    UIController.UpdateMomentum(characterObject.MomentumUnit)
+    UIController.UpdateVelocities(characterObject.FreefallSpeed, characterObject.LastFallSpeed, characterObject.ForwardVelocity, characterObject.LastUpSpeed)
+end)
 
 RunService.PreSimulation:Connect(function(deltaTime)
     characterObject:UpdateObject()
     characterObject:UpdateWallRunObj()
     characterObject:CheckOverHang()
 
+    local rotationLocked = characterObject.isWallRunning or characterObject.isInLedgeCatch or characterObject.isSliding
+    characterObject.Humanoid.AutoRotate = not rotationLocked
+
     if characterObject.isWallRunning then
         characterObject:UpdateWallRun(InputController.isKeyDown("W"), deltaTime)
+    end
+
+    if characterObject:CanLedgeCatch() and not characterObject.isInLedgeCatch and (time() - ParkourController.spaceInputBuffer < ParkourController.ledgeWindow) then
+        ParkourController.AttemptLedgeCatch()
+        characterObject.isInLedgeCatch = true
     end
 
     AnimationController.UpdateMovementAnimation(characterObject)
@@ -67,8 +79,6 @@ end)
 RunService.PostSimulation:Connect(function(deltaTime)
     characterObject:UpdateMomentum(deltaTime)
     characterObject:UpdateVelocities()
-    UIController.UpdateMomentum(characterObject.MomentumUnit)
-    UIController.UpdateVelocities(characterObject.FreefallSpeed, characterObject.LastFallSpeed, characterObject.ForwardVelocity)
 
     if InputController.MaintainSlideInput() and characterObject.isSliding and characterObject.MomentumUnit > 0 then
         characterObject:SlideDecay(deltaTime)

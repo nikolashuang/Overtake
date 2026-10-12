@@ -2,8 +2,8 @@ local ParkourConfig = {
     Vault = {
         MAX_VAULT_HEIGHT = 4,
         BUFFER_CHECK = 3,
-        MIN_VAULT_DISTANCE = 4,
-        MAX_VAULT_DISTANCE = 8,
+        MIN_VAULT_DISTANCE = 2.5,
+        MAX_VAULT_DISTANCE = 6,
         MIN_VAULT_SPEED = 25,
         VAULT_DURATION = 0.3,
         TALL_VAULT_CONSUMPTION = 7.5,
@@ -31,7 +31,7 @@ local ParkourConfig = {
 
     WallRun = {
         MIN_WALLRUN_MOMENTUM = 50,
-        MAX_WALL_ATTACH_DISTANCE = 4,
+        MAX_WALL_ATTACH_DISTANCE = 2.5,
         WALL_RUN_WINDOW = 2,
         WALL_RUN_DECAY = 33,
         INIT_WALLRUN_HEIGHT_BOOST = 20,
@@ -58,6 +58,7 @@ local ParkourConfig = {
         MIN_FALL_SPEED_TO_CLIMB = -65,
         CLIMB_CD = 0.75,
         SIDEWAY_INPUT_WINDOW = 0.2,
+        LEDGE_CATCH_WINDOW = 0.4
     }
 
 

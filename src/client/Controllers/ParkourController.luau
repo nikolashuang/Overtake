@@ -13,7 +13,9 @@ local dInput = 0
 
 local ParkourController = {}
 
-ParkourController.shiftInput = time()
+ParkourController.shiftInput = 0
+ParkourController.spaceInputBuffer = 0
+ParkourController.ledgeWindow = ClimbConfig.LEDGE_CATCH_WINDOW
 
 function ParkourController.Init(CharInfo)
     characterObject = CharInfo
@@ -36,6 +38,11 @@ function ParkourController.HandleInput(input)
     
     
     if input.KeyCode == Enum.KeyCode.LeftShift then
+        if characterObject.isInLedgeCatch then
+            characterObject:ExitLedgeCatch()
+            return
+        end
+
         ParkourController.shiftInput = time()
         local timingWindow = ParkourController.shiftInput - characterObject.Landed
         if characterObject.TempLockSliding and characterObject:isGrounded() and characterObject:CanRecoveryRoll() and timingWindow < RecoveryConfig.ROLL_WINDOW then
@@ -57,7 +64,14 @@ function ParkourController.HandleInput(input)
 end
 
 function ParkourController.HandleSpaceInput()
-    if characterObject:CanLedgeCatch() then
+    ParkourController.spaceInputBuffer = time()
+
+    if characterObject.isInLedgeCatch then
+        characterObject:ExitLedgeCatch("Space")
+        return
+    end
+
+    if characterObject:CanLedgeCatch() and not characterObject.isInLedgeCatch then
         ParkourController.AttemptLedgeCatch()
         return
     end

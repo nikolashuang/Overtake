@@ -18,10 +18,11 @@ function UIController.UpdateMomentum(momentumUnit)
     mainGui.MomentumUnit.Text = "MomentumUnit: " .. math.round(momentumUnit)
 end
 
-function UIController.UpdateVelocities(downwardSpeed, lastSpeed, forwardSpeed)
+function UIController.UpdateVelocities(downwardSpeed, lastSpeed, forwardSpeed, upwardSpeed)
     mainGui.FallSpeed.Text = "Fall Velocity: " .. math.round(downwardSpeed)
     mainGui.LastFallSpeed.Text = "Last Fall Velocity: " .. math.round(lastSpeed)
     mainGui.ForwardVelocity.Text = "Forward Velocity: " .. math.round(forwardSpeed)
+    mainGui.LastUpSpeed.Text = "Last Up Velocity: " .. math.round(upwardSpeed)
 end
 
 
