@@ -1,3 +1,4 @@
+local Debris = game:GetService("Debris")
 local ParkourDetection = {}
 
 -- DEBUG TOOLS --
@@ -237,8 +238,65 @@ function ParkourDetection.DetectSlideOverHang(character, overhangDistance)
     return false
 end
 
-function ParkourDetection.DetectPreciseLedgeFrame()
+function ParkourDetection.DetectPreciseLedgeFrame(character, raycastobj, isNearLedge)
+    if not isNearLedge then return nil end
     
+    local objNormal = raycastobj.Normal
+    local objPosition = raycastobj.Position
+
+    local rayOrigin = objPosition + (-objNormal * 0.2) + Vector3.new(0, 4, 0)
+    local rayDirection = Vector3.new(0, -6, 0)
+    
+    local params = RaycastParams.new()
+    params.FilterType = Enum.RaycastFilterType.Exclude
+    params.FilterDescendantsInstances = {character}
+
+    --Debug tool on the fly :|
+
+    local startAttachment = Instance.new("Attachment")
+    startAttachment.Parent = workspace.Terrain
+    startAttachment.WorldPosition = rayOrigin
+
+    local endAttachment = Instance.new("Attachment")
+    endAttachment.Parent = workspace.Terrain
+    endAttachment.WorldPosition = rayOrigin + rayDirection
+
+    local rayBeam = Instance.new("Beam")
+    rayBeam.Parent = workspace.Terrain
+    rayBeam.Attachment0 = startAttachment
+    rayBeam.Attachment1 = endAttachment
+    rayBeam.Width0 = 0.1
+    rayBeam.Width1 = 0.1
+    rayBeam.FaceCamera = true
+
+    ---------------------------------
+
+    local ledgeDetection = validateHit(workspace:Raycast(rayOrigin, rayDirection, params))
+    print(ledgeDetection)
+
+    if ledgeDetection and ledgeDetection.Normal.Y > 0.85 then
+        local preciseObjHeight = ledgeDetection.Position.Y
+        local preciseObjHorizontal = objPosition
+        local characterOffset = 1.2
+        local characterHang = Vector3.new(0, -2, 0)
+
+        local finalCharPosition = Vector3.new(preciseObjHorizontal.X, preciseObjHeight, preciseObjHorizontal.Z) + (characterOffset * objNormal) + characterHang
+
+        local lookTarget = finalCharPosition - objNormal
+        local characterPosition = CFrame.lookAt(finalCharPosition, lookTarget)
+
+        Debris:AddItem(startAttachment, 1)
+        Debris:AddItem(endAttachment, 1)
+        Debris:AddItem(rayBeam, 1)
+
+        return characterPosition
+    end
+
+    Debris:AddItem(startAttachment, 1)
+    Debris:AddItem(endAttachment, 1)
+    Debris:AddItem(rayBeam, 1)
+
+    return nil
 
 end
 

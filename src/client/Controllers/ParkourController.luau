@@ -57,6 +57,11 @@ function ParkourController.HandleInput(input)
 end
 
 function ParkourController.HandleSpaceInput()
+    if characterObject:CanLedgeCatch() then
+        ParkourController.AttemptLedgeCatch()
+        return
+    end
+
     if characterObject:CanWallRun() and not characterObject.isWallRunning then
         ParkourController.AttemptWallRun()
         return
@@ -154,5 +159,11 @@ function ParkourController.AttemptExtendedClimb(input)
     characterObject:ExtendedClimbBoost(input)
     pRemote:FireServer("ExtendedClimb")
 end
+
+function ParkourController.AttemptLedgeCatch()
+    characterObject:LedgeCatch()
+    pRemote:FireServer("LedgeCatch")
+end
+
 
 return ParkourController

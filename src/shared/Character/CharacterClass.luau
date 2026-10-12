@@ -63,6 +63,7 @@ function CharacterClass.new(player, system)
     self.WallRunCD = WallRunConfig.WALL_RUN_CD
 
     self.isClimbing = false
+    self.isInLedgeCatch = false
     self.ClimbingAConsumed = false
     self.ClimbingDConsumed = false
 
@@ -208,6 +209,10 @@ function CharacterClass:UpdateObject()
     
     self.traversalObj = traversalObj
     self.traversalType = traversalType
+end
+
+function CharacterClass:LookForPreciseLedge()
+    return ParkourDetection.DetectPreciseLedgeFrame(self.Character, self.traversalObj, self.traversalType == "LedgeCatch")
 end
 
 
@@ -685,10 +690,32 @@ function CharacterClass:ExtendedClimbBoost(sidewayInput)
 end
 
 function CharacterClass:CanLedgeCatch()
-    if self.traversalType ~= "LedgeCatch" then return end
-    if self.Staggered then return end
+    if self.traversalType ~= "LedgeCatch" then return false end
+    if not self:isGrounded() then return false end
+    if self.Staggered then return false end
 
     return true
+end
+
+function CharacterClass:LedgeCatch()
+    local root = self.RootPart
+
+    print("function called")
+
+    if self:LookForPreciseLedge() == nil then return end
+    print("attempted LedgeCatch")
+
+    self.isInLedgeCatch = true
+
+    local alignPosition = Instance.new("AlignPosition")
+    alignPosition.Attachment0 = self.MovementAttachment
+    alignPosition.Mode = Enum.PositionAlignmentMode.OneAttachment
+    alignPosition.RigidityEnabled = true
+    alignPosition.Parent = root
+
+    root.CFrame = self:LookForPreciseLedge()
+    alignPosition.Position = root.Position
+
 end
 
 

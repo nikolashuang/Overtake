@@ -51,7 +51,7 @@ UserInput.InputBegan:Connect(function(input, processed)
 end)
 
 
-RunService.PreRender:Connect(function(deltaTime)
+RunService.PreSimulation:Connect(function(deltaTime)
     characterObject:UpdateObject()
     characterObject:UpdateWallRunObj()
     characterObject:CheckOverHang()
