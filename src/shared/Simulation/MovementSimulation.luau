@@ -14,16 +14,30 @@ local playerConnections = {}
 local started = false
 
 function Simulation.CheckFeatures()
-    assert(workspace.UseFixedSimulation == Enum.RolloutState.Enabled,
-        "Overtake requires Workspace.UseFixedSimulation = Enabled; see NATIVE_AUTHORITY_REPORT.md")
-    assert(workspace.NextGenerationReplication == Enum.RolloutState.Enabled and workspace.StreamingEnabled,
-        "Enable native replication and streaming before testing Overtake")
-    -- These settings have RobloxScriptSecurity in current API metadata. A game
-    -- script cannot reliably inspect them; the place file must configure them.
+    assert(workspace.StreamingEnabled, "Enable Workspace.StreamingEnabled before testing Overtake")
+    -- UseFixedSimulation and NextGenerationReplication are NotScriptable:
+    -- runtime reads throw "not a valid member", despite their Studio settings
+    -- and serialization being supported. AuthorityMode is protected too.
+    -- Configure them through the place/Studio; bind the actual native callback
+    -- below to validate fixed-simulation availability without probing settings.
     local readable, mode = pcall(function() return workspace.AuthorityMode end)
     if readable then assert(mode == Enum.AuthorityMode.Server, "Native server authority must be enabled") end
     assert(workspace:GetAttribute("OvertakeNativeAuthority") == true,
         "Use the experimental Rojo project and verify AuthorityMode = Server in Studio")
+end
+
+function Simulation.BindStep()
+    local success, connection = pcall(function()
+        return RunService:BindToSimulation(function(dt)
+            for _, entry in pairs(characters) do
+                Simulation.Step(entry.Character, Inputs.Read(entry.Actions), dt)
+            end
+        end, Enum.StepFrequency.Hz60, 2000)
+    end)
+    assert(success, "Overtake could not bind native simulation. In Studio, verify Workspace AuthorityMode = Server "
+        .. "and UseFixedSimulation = Enabled, then restart the playtest. No movement fallback is enabled. Engine error: "
+        .. tostring(connection))
+    return connection
 end
 
 function Simulation.PrepareCharacter(character)
@@ -219,6 +233,8 @@ end
 function Simulation.Initialize()
     if started then return end
     Simulation.CheckFeatures()
+    local simulationConnection = Simulation.BindStep()
+    table.insert(connections, simulationConnection)
     started = true
     refreshIgnored()
     table.insert(connections, workspace.DescendantAdded:Connect(function(instance)
@@ -235,10 +251,6 @@ function Simulation.Initialize()
     else
         task.spawn(bindPlayer, localPlayer)
     end
-    -- No remote state payloads, table snapshots, or custom reconciliation.
-    table.insert(connections, RunService:BindToSimulation(function(dt)
-        for _, entry in pairs(characters) do Simulation.Step(entry.Character, Inputs.Read(entry.Actions), dt) end
-    end, Enum.StepFrequency.Hz60, 2000))
 end
 
 function Simulation.Destroy()

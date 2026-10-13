@@ -345,10 +345,46 @@ test("rollback of the instance graph does not retain a speculative pool handle",
     local replayed = c.RootPart:FindFirstChild("WallRedirect_LinearVelocity_1_Pool1")
     assert(replayed and replayed ~= speculative and replayed.Enabled)
 end)
+test("startup does not read NotScriptable Workspace prerequisites", function()
+    local originalMeta = getmetatable(workspace)
+    local originalGet = workspace.GetAttribute
+    local originalStreaming = workspace.StreamingEnabled
+    local reads = {}
+    workspace.StreamingEnabled = true
+    workspace.GetAttribute = function(_,name) return name == "OvertakeNativeAuthority" end
+    setmetatable(workspace, {__index = function(_,key)
+        reads[key] = true
+        error(key .. " is not a valid member of Workspace")
+    end})
+    Simulation.CheckFeatures()
+    assert(not reads.UseFixedSimulation and not reads.NextGenerationReplication)
+    workspace.StreamingEnabled = false
+    local ok,err = pcall(Simulation.CheckFeatures)
+    assert(not ok and string.find(err,"StreamingEnabled"))
+    workspace.StreamingEnabled = true
+    workspace.GetAttribute = function() return false end
+    ok,err = pcall(Simulation.CheckFeatures)
+    assert(not ok and string.find(err,"experimental Rojo project"))
+    setmetatable(workspace,originalMeta)
+    workspace.GetAttribute,workspace.StreamingEnabled = originalGet,originalStreaming
+end)
+test("native bind failure aborts with setup guidance and has no fallback", function()
+    local service = services.RunService
+    local previous = service.BindToSimulation
+    local binds = 0
+    service.BindToSimulation = function()
+        binds += 1
+        error("Fixed simulation is not enabled")
+    end
+    local ok,err = pcall(Simulation.BindStep)
+    assert(not ok and string.find(err,"UseFixedSimulation = Enabled"))
+    assert(string.find(err,"Fixed simulation is not enabled") and binds == 1)
+    local connection = {Disconnect = function() end}
+    service.BindToSimulation = function(_,callback,frequency,priority)
+        assert(type(callback) == "function" and frequency == Enum.StepFrequency.Hz60 and priority == 2000)
+        return connection
+    end
+    assert(Simulation.BindStep() == connection)
+    service.BindToSimulation = previous
+end)
 print(string.format("%d movement regression tests passed (engine test doubles; no Roblox physics/network execution)",passed))
-
-
-
-
-
-

@@ -7,7 +7,7 @@ Investigation and documentation checked on October 13, 2026.
 
 The experimental movement path uses Roblox native input replication, fixed simulation, predicted attributes, and engine rollback/resimulation. All movement mechanics implemented in the reference source have been routed through that path. This is a runnable Studio prototype build, **not a claim of successful Roblox runtime testing**.
 
-Completed checks: official simulation-access metadata audit; Luau compilation; 20 regression tests executing the actual production module bodies against engine test doubles; Rojo place builds. The doubles test formulas, eligibility, deadlines, state restoration, and replay. They do not test Roblox physics, replication, streaming, animation replication, or engine corrections.
+Completed checks: official simulation-access metadata audit; Luau compilation; 22 regression tests executing the actual production module bodies against engine test doubles; Rojo place builds. The doubles test formulas, eligibility, deadlines, state restoration, and replay. They do not test Roblox physics, replication, streaming, animation replication, or engine corrections.
 
 Native server authority is available: Roblox announced its full release on July 9, 2026. The older beta instructions are superseded by the current Workspace setup. [Official full-release announcement](https://devforum.roblox.com/t/full-release-ship-fair-and-competitive-games-with-server-authority/4727993).
 
@@ -74,7 +74,7 @@ No horizontal speed cap was added. A regression explicitly verifies a 120-stud/s
 - Detection excludes Humanoid models using a lifecycle cache outside simulation. Traversal ray thresholds/classification remain unchanged. Debug Beams are replaced by native visualizer/logs.
 - Studio profile loading/saving is skipped; published profile behavior remains the existing service. No ranked/contact/attribute gameplay is invented: these were not implemented in the source and receive no client result endpoint.
 - Desktop keyboard/mouse is the supported prototype input surface. A mobile/gamepad binding pass remains future work; existing parkour routing was keyboard/MMB-based.
-- AuthorityMode and PlayerScriptsUseInputActionSystem are protected settings in current official metadata. Runtime scripts cannot reliably inspect/set them. Rojo serializes them into the place; verify them in Studio. The bootstrap checks accessible prerequisites and an explicit project marker and fails rather than introducing a fallback. Merely setting the marker is not proof of native authority.
+- UseFixedSimulation and NextGenerationReplication are NotScriptable, and AuthorityMode/PlayerScriptsUseInputActionSystem are protected. A runtime read can throw "not a valid member" even though Studio exposes the setting. Rojo serializes them into the place; verify them in Studio. The bootstrap checks streaming and the explicit project marker, then binds the actual native callback. A failed bind aborts before character/input lifecycle setup with the engine error and setup guidance; it never installs a movement fallback. Binding proves fixed simulation is available, not that AuthorityMode is Server. Merely setting the marker is not proof of native authority.
 - Original Animation instances and MainGui are not in this repository. The standalone build runs movement without them. Sync into a copy of the existing Overtake place to evaluate its custom presentation. No animation IDs were fabricated.
 - Rapid same-ability reactivation uses additional native predicted pool slots to retain overlapping boosts. Verify instance stitching and expiry during rapid wall redirects/re-entry in Studio. Pool growth should stop at the maximum observed concurrency.
 - Terrain vault height still inherits the original BasePart Size assumption. Dynamic geometry, skeletal collision behavior, streamed geometry, animation corrections, and native Humanoid timing require actual engine tests.
@@ -135,3 +135,7 @@ Run the regression suite with the official Luau CLI:
 The harness bundles production source with injected engine doubles into a temporary file; it is not shipped as a runtime prediction component.
 
 
+
+## Startup correction after Studio feedback
+
+The first user-provided Studio log exposed a startup failure on both server and client: CheckFeatures read Workspace.UseFixedSimulation directly. The official Workspace API marks that property and NextGenerationReplication NotScriptable. The direct reads were removed; native callback binding now performs the fixed-simulation capability check. Two regressions cover inaccessible prerequisite properties and native-binding failure/success. The suite now has 22 passing checks. A new successful Studio playtest is still required.
