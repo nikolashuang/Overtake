@@ -735,7 +735,7 @@ function CharacterClass:LedgeCatch()
     self.LedgeAlignPosition.Position = root.Position
     self.LedgeAlignOrientation.CFrame = CFrame.lookAt(Vector3.zero, -flatLook)
 
-    if self.FreefallSpeed < 0 then
+    if self.FreefallSpeed < RecoveryConfig.MIN_FALL_SPEED then
         self:ConsumeMomentum(self.MomentumUnit * 0.75)
     end
 
