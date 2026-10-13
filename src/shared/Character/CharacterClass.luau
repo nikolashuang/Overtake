@@ -625,6 +625,7 @@ function CharacterClass:Climb()
     if self.isClimbing then return end
 
     self.isClimbing = true
+    self.HaltMomentum = true
 
     humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
 

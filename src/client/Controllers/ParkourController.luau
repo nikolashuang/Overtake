@@ -131,6 +131,7 @@ function ParkourController.RefreshClimbConsumption()
     characterObject.ClimbingAConsumed = false
     characterObject.ClimbingDConsumed = false
     characterObject.isClimbing = false
+    characterObject.HaltMomentum = false
 end
 
 
