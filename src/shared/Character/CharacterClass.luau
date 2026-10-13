@@ -94,7 +94,7 @@ function CharacterClass:BindCharacter(character)
     self.Humanoid = character:WaitForChild("Humanoid")
     self.RootPart = character:WaitForChild("HumanoidRootPart")
     self.Humanoid.WalkSpeed = MomentumConfig.MIN_MOVE_SPEED
-    self.Humanoid.JumpHeight = 1.5
+    self.Humanoid.JumpHeight = 2.25
 
     self.MovementAttachment = Instance.new("Attachment")
     self.MovementAttachment.Name = "MovementAttachment"
@@ -136,7 +136,7 @@ end
 
 function CharacterClass:UpdateMomentum(deltaTime)
 
-    local isMoving = self.Humanoid.MoveDirection.Magnitude > 0
+    local isMoving = self.Humanoid.MoveDirection.Magnitude > 0 and not self.isInLedgeCatch and not self.isCrawling
     self.Humanoid.WalkSpeed = MomentumConfig.MIN_MOVE_SPEED
 
     if not self.isCrawling then
@@ -144,7 +144,7 @@ function CharacterClass:UpdateMomentum(deltaTime)
         if self.HaltMomentum then
             self.Stationary = 0
         
-        elseif isMoving and not self.isCrawling then
+        elseif isMoving then
             self.Stationary = 0
             self.MomentumUnit = math.min(MomentumConfig.MAX_MOMENTUM, self.MomentumUnit + self.RisingMomentum * deltaTime)
             self.RisingMomentum = math.min(MomentumConfig.MAX_RISING_MOMENTUM, self.RisingMomentum + 12 * deltaTime)
@@ -735,6 +735,8 @@ function CharacterClass:LedgeCatch()
         self:ConsumeMomentum(self.MomentumUnit * 0.75)
     end
 
+    self.AnimationController.PlayAnimation("ParkourAnims", "LedgeHangAnim")
+
 end
 
 function CharacterClass:ExitLedgeCatch(input)
@@ -759,6 +761,10 @@ function CharacterClass:ExitLedgeCatch(input)
     end
 
     self.isInLedgeCatch = false
+
+    self.AnimationController.StopAnimation("ParkourAnims", "LedgeHangAnim")
+    self.AnimationController.PlayAnimation("ParkourAnims", "MantleAnim")
+
 end
 
 

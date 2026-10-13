@@ -121,14 +121,14 @@ function ParkourDetection.DetectObstacle(character, vaultDistance)
         debugVaultBeams.debugWaistBeam.Position = localMoveDirection + stableRootOffset
         debugVaultBeams.debugHeadBeam.Position = localMoveDirection + stableHeadOffset
         debugVaultBeams.debugKneeBeam.Position = localMoveDirection + stableKneeOffset
-        debugVaultBeams.debugClimbBeam.Position = localMoveDirection + stableClimbOffset
+        debugVaultBeams.debugClimbBeam.Position = Vector3.new(0, 0, -5) + stableClimbOffset
     end
 
 
     local waistDetection = validateHit(workspace:Raycast(stableRootPosition, root.CFrame.LookVector * VAULT_DISTANCE, params))
     local headDetection = validateHit(workspace:Raycast(stableHeadPosition, root.CFrame.LookVector * VAULT_DISTANCE, params))
     local kneeDetection = validateHit(workspace:Raycast(stableKneePosition, root.CFrame.LookVector * VAULT_DISTANCE, params))
-    local climbDetection = validateHit(workspace:Raycast(stableClimbPosition, root.CFrame.LookVector * VAULT_DISTANCE, params))
+    local climbDetection = validateHit(workspace:Raycast(stableClimbPosition, root.CFrame.LookVector * 5, params))
 
     local waistBelow = waistDetection and kneeDetection
 

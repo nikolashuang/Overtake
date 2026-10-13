@@ -64,12 +64,13 @@ function ParkourController.HandleInput(input)
 end
 
 function ParkourController.HandleSpaceInput()
-    ParkourController.spaceInputBuffer = time()
-
     if characterObject.isInLedgeCatch then
         characterObject:ExitLedgeCatch("Space")
         return
     end
+
+    ParkourController.spaceInputBuffer = time()
+
 
     if characterObject:CanLedgeCatch() and not characterObject.isInLedgeCatch then
         ParkourController.AttemptLedgeCatch()

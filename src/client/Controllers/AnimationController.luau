@@ -23,7 +23,9 @@ local AnimationStorage = {
         LeftWallRunAnim = AnimationFolder.Parkour:FindFirstChild("LeftWallRun"),
         RightWallDriftAnim = AnimationFolder.Parkour:FindFirstChild("RightWallDrift"),
         LeftWallDriftAnim = AnimationFolder.Parkour:FindFirstChild("LeftWallDrift"),
-        RecoveryRollAnim = AnimationFolder.Parkour:FindFirstChild("RecoveryRoll")
+        RecoveryRollAnim = AnimationFolder.Parkour:FindFirstChild("RecoveryRoll"),
+        LedgeHangAnim = AnimationFolder.Parkour:FindFirstChild("LedgeHang"),
+        MantleAnim = AnimationFolder.Parkour:FindFirstChild("Mantle")
     }
 
 }
@@ -99,6 +101,7 @@ end
 
 local function doingDifferentMovementAction(characterObject)
     if not characterObject.isSliding then return false end
+    if not characterObject.isInLedgeCatch then return false end
 
     return true
 end
