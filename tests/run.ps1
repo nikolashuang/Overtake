@@ -8,7 +8,8 @@ $modules = @(
     @('Detection','src/shared/Parkour/ParkourDetection.luau'),
     @('CharacterClass','src/shared/Character/CharacterClass.luau'),
     @('Inputs','src/shared/Simulation/MovementInputs.luau'),
-    @('Simulation','src/shared/Simulation/MovementSimulation.luau')
+    @('Simulation','src/shared/Simulation/MovementSimulation.luau'),
+    @('Diagnostics','src/shared/Simulation/MovementDiagnostics.luau')
 )
 foreach ($module in $modules) {
     $source = Get-Content (Join-Path $root $module[1]) -Raw

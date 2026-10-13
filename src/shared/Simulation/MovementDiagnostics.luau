@@ -6,7 +6,7 @@ local Diagnostics = {}
 function Diagnostics.Initialize(simulation)
     if not RunService:IsStudio() then return end
     local server = RunService:IsServer()
-    local samples, resimulated, corrections = {}, 0, 0
+    local samples, resimulated, rollbacks = {}, 0, 0
     local sampledCharacter
     local remote
     if server then
@@ -15,22 +15,11 @@ function Diagnostics.Initialize(simulation)
         remote.Parent = RepStorage
     else
         remote = RepStorage:WaitForChild("OvertakeAuthorityDiagnostics")
-        -- Misprediction access can depend on script capabilities/Studio build.
-        local success, err = pcall(function()
-            RunService.Misprediction:Connect(function(frameTime, instances, stats)
-                corrections += 1
-                if workspace:GetAttribute("OvertakeDiagnostics") == true then
-                    print("[Overtake correction]", frameTime, "instances", #instances, "stats", stats)
-                    for _, entry in ipairs(instances) do
-                        for name, values in pairs(entry.Attributes or {}) do
-                            print("[Overtake attribute correction]", name, "predicted", values.Predicted, "server", values.Authoritative)
-                        end
-                    end
-                end
-            end)
-        end)
-        if not success then warn("[Overtake] Misprediction signal unavailable; use Ctrl+Shift+F6:", err) end
+        -- Misprediction requires PluginOrOpenCloud and is not available to
+        -- ordinary LocalScripts. Use Studio's native authority visualizer for
+        -- engine correction details; runtime logs track rollback and replay.
         RunService.Rollback:Connect(function(frameTime)
+            rollbacks += 1
             if workspace:GetAttribute("OvertakeDiagnostics") == true then print("[Overtake rollback]", frameTime) end
         end)
         remote.OnClientEvent:Connect(function(snapshot)
@@ -38,7 +27,7 @@ function Diagnostics.Initialize(simulation)
             local predicted = samples[snapshot.Tick]
             print("[Overtake state] authoritative tick", snapshot.Tick, "momentum", snapshot.Momentum,
                 "predicted at same tick", predicted, "delta", predicted and predicted - snapshot.Momentum,
-                "resimulated callbacks", resimulated, "corrections", corrections,
+                "resimulated callbacks", resimulated, "rollbacks", rollbacks,
                 "invalid input frames", snapshot.Invalid, "wall run", snapshot.WallRun, "slide", snapshot.Slide)
         end)
     end

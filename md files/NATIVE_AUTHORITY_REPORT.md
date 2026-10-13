@@ -7,7 +7,7 @@ Investigation and documentation checked on October 13, 2026.
 
 The experimental movement path uses Roblox native input replication, fixed simulation, predicted attributes, and engine rollback/resimulation. All movement mechanics implemented in the reference source have been routed through that path. This is a runnable Studio prototype build, **not a claim of successful Roblox runtime testing**.
 
-Completed checks: official simulation-access metadata audit; Luau compilation; 22 regression tests executing the actual production module bodies against engine test doubles; Rojo place builds. The doubles test formulas, eligibility, deadlines, state restoration, and replay. They do not test Roblox physics, replication, streaming, animation replication, or engine corrections.
+Completed checks: official simulation-access metadata audit; Luau compilation; 23 regression tests executing the actual production module bodies against engine test doubles; Rojo place builds. The doubles test formulas, eligibility, deadlines, state restoration, and replay. They do not test Roblox physics, replication, streaming, animation replication, or engine corrections.
 
 Native server authority is available: Roblox announced its full release on July 9, 2026. The older beta instructions are superseded by the current Workspace setup. [Official full-release announcement](https://devforum.roblox.com/t/full-release-ship-fair-and-competitive-games-with-server-authority/4727993).
 
@@ -102,7 +102,7 @@ Open the generated test place. In Workspace Properties verify:
 
 In StarterPlayer verify DevComputerMovementMode and DevTouchMovementMode are Scriptable. Leave Roblox's default camera enabled. These settings avoid a competing default movement/jump writer; no PlayerModule path is assumed. [StarterPlayer API](https://create.roblox.com/docs/reference/engine/classes/StarterPlayer).
 
-Start with Test > Server & Clients, two clients. Inspect both server and client Output for simulation-access errors. Enable the server authority visualizer with Ctrl+Shift+F6. Set Workspace's `OvertakeDiagnostics` attribute true in the client context, or use the original Debug button if that UI exists. The server sends read-only state snapshots; client logs distinguish server momentum from its first prediction at the same simulation tick. The optional Misprediction signal prints actual corrected attribute values when available; otherwise use the visualizer. Rollback events and resimulated callback counts remain observable. A missing diagnostic sample is not reported as a matching prediction.
+Start with Test > Server & Clients, two clients. Inspect both server and client Output for simulation-access errors. Enable the server authority visualizer with Ctrl+Shift+F6. Set Workspace's `OvertakeDiagnostics` attribute true in the client context, or use the original Debug button if that UI exists. The server sends read-only state snapshots; client logs distinguish server momentum from its first prediction at the same simulation tick. Misprediction is restricted to PluginOrOpenCloud and is not connected by ordinary game scripts. Use the visualizer for engine correction details. Runtime rollback counts/events, same-tick momentum differences, and resimulated callback counts remain observable. A missing diagnostic sample is not reported as a matching prediction.
 
 Repeat with Studio network emulation: baseline; roughly 100 ms each direction; roughly 200 ms each direction with jitter; packet loss if your build exposes it. Record the configured units/direction (some controls express round-trip latency). Inspect input accept/drop rates and server simulation FPS. Input drops and ordinary corrections must not cause kicks or penalties. No punitive anticheat is implemented.
 
@@ -139,3 +139,7 @@ The harness bundles production source with injected engine doubles into a tempor
 ## Startup correction after Studio feedback
 
 The first user-provided Studio log exposed a startup failure on both server and client: CheckFeatures read Workspace.UseFixedSimulation directly. The official Workspace API marks that property and NextGenerationReplication NotScriptable. The direct reads were removed; native callback binding now performs the fixed-simulation capability check. Two regressions cover inaccessible prerequisite properties and native-binding failure/success. The suite now has 22 passing checks. A new successful Studio playtest is still required.
+
+## Diagnostic capability correction
+
+Studio feedback confirmed that RunService.Misprediction rejects ordinary LocalScripts with the PluginOrOpenCloud capability error. The unsupported connection and warning were removed; logs now report rollback counts rather than an unavailable correction count. A diagnostic initialization regression simulates restricted access. This warning was caught by pcall and did not stop movement initialization.

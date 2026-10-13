@@ -387,4 +387,28 @@ test("native bind failure aborts with setup guidance and has no fallback", funct
     assert(Simulation.BindStep() == connection)
     service.BindToSimulation = previous
 end)
+test("runtime diagnostics never access the plugin-only Misprediction signal", function()
+    local service = services.RunService
+    local replica = services.ReplicatedStorage
+    local oldStudio,oldServer,oldBind,oldRollback = service.IsStudio,service.IsServer,service.BindToSimulation,service.Rollback
+    local oldWait,oldGet,oldMeta = replica.WaitForChild,workspace.GetAttribute,getmetatable(service)
+    local rollbackCallback
+    local remote = {OnClientEvent = {Connect = function() return {} end}}
+    service.IsStudio = function() return true end
+    service.IsServer = function() return false end
+    service.Rollback = {Connect = function(_,callback) rollbackCallback = callback; return {} end}
+    service.BindToSimulation = function(_,callback) callback(); return {} end
+    replica.WaitForChild = function() return remote end
+    workspace.GetAttribute = function() return false end
+    setmetatable(service,{__index = function(_,key)
+        if key == "Misprediction" then error("lacking capability PluginOrOpenCloud") end
+        return nil
+    end})
+    Diagnostics.Initialize({GetCharacter = function() return nil end})
+    assert(rollbackCallback)
+    rollbackCallback(1)
+    setmetatable(service,oldMeta)
+    service.IsStudio,service.IsServer,service.BindToSimulation,service.Rollback = oldStudio,oldServer,oldBind,oldRollback
+    replica.WaitForChild,workspace.GetAttribute = oldWait,oldGet
+end)
 print(string.format("%d movement regression tests passed (engine test doubles; no Roblox physics/network execution)",passed))
