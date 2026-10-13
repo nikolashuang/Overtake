@@ -46,8 +46,7 @@ local ParkourConfig = {
         MAX_FALL_SPEED = -190,
         PERFECT_ROLL_WINDOW = 0.075,
         ROLL_WINDOW = 0.125,
-        PERFECT_ROLL_CONSUMPTION = 25,
-        ROLL_CONSUMPTION = 40,
+        ROLL_CONSUMPTION = 30,
         MIN_ROLL_SPEED = 20,
     },
 

@@ -144,7 +144,7 @@ function CharacterClass:UpdateMomentum(deltaTime)
         if self.HaltMomentum then
             self.Stationary = 0
         
-        elseif isMoving then
+        elseif isMoving and math.abs(self.ForwardVelocity) > 10 then
             self.Stationary = 0
             self.MomentumUnit = math.min(MomentumConfig.MAX_MOMENTUM, self.MomentumUnit + self.RisingMomentum * deltaTime)
             self.RisingMomentum = math.min(MomentumConfig.MAX_RISING_MOMENTUM, self.RisingMomentum + 12 * deltaTime)
@@ -171,11 +171,10 @@ function CharacterClass:UpdateVelocities()
 
     local velocity = root.AssemblyLinearVelocity
     local horizontalVelocity = Vector3.new(velocity.X, 0, velocity.Z)
-    local look = root.CFrame.LookVector
 
     if humanoid:GetState() ~= Enum.HumanoidStateType.Freefall then
         self.FreefallSpeed = 0
-        self.ForwardVelocity = horizontalVelocity:Dot(look)
+        self.ForwardVelocity = horizontalVelocity:Dot(humanoid.MoveDirection)
         return
     end
 
@@ -597,9 +596,7 @@ function CharacterClass:RecoveryRoll(timing)
     local flatLook = Vector3.new(root.CFrame.LookVector.X, 0, root.CFrame.LookVector.Z).Unit
     local forwardSpeed = math.max(currentVelocity:Dot(flatLook), RecoveryConfig.MIN_ROLL_SPEED)
 
-    if timing < RecoveryConfig.PERFECT_ROLL_WINDOW then
-        self:ConsumeMomentum(RecoveryConfig.PERFECT_ROLL_CONSUMPTION)
-    elseif timing >= RecoveryConfig.PERFECT_ROLL_WINDOW and timing <= RecoveryConfig.ROLL_WINDOW then
+    if timing >= RecoveryConfig.PERFECT_ROLL_WINDOW and timing <= RecoveryConfig.ROLL_WINDOW then
         self:ConsumeMomentum(RecoveryConfig.ROLL_CONSUMPTION)
     end
 
@@ -651,10 +648,12 @@ function CharacterClass:Climb()
     linVel.VectorVelocity = (Vector3.yAxis * ClimbConfig.NORMAL_CLIMB_SPEED) + (-wallNoraml * ClimbConfig.SOFT_PUSH_PRESSURE)
     align.CFrame = CFrame.lookAt(Vector3.zero, flatLook)
 
-    Debris:AddItem(linVel, 0.5)
-    Debris:AddItem(align, 0.5)
+    Debris:AddItem(linVel, 0.85)
+    Debris:AddItem(align, 0.85)
 
     self.LastClimb = time()
+
+    self.AnimationController.PlayAnimation("ParkourAnims", "ClimbAnim")
 
     task.delay(0.5, function()
         humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
@@ -663,6 +662,8 @@ function CharacterClass:Climb()
 end
 
 function CharacterClass:ExtendedClimbBoost(sidewayInput)
+    self.AnimationController.StopAnimation("ParkourAnims", "ClimbAnim")
+
     local root = self.RootPart
 
     if self.ClimbingAConsumed and sidewayInput == "A" then
@@ -680,9 +681,11 @@ function CharacterClass:ExtendedClimbBoost(sidewayInput)
     linVel.Parent = root
 
     if not self.ClimbingAConsumed and sidewayInput == "A" then
-        linVel.VectorVelocity = (root.CFrame.UpVector * ClimbConfig.EXTENDED_BOOST_SPEED) + (wallNormal * ClimbConfig.SOFT_PUSH_PRESSURE)
+        linVel.VectorVelocity = (root.CFrame.UpVector * ClimbConfig.EXTENDED_BOOST_SPEED) + (wallNormal * ClimbConfig.SOFT_PUSH_PRESSURE) + Vector3.new(-8, 0, 0)
+        self.AnimationController.PlayAnimation("ParkourAnims", "ClimbBoostLAnim")
     elseif not self.ClimbingDConsumed and sidewayInput == "D" then
-        linVel.VectorVelocity = (root.CFrame.UpVector * ClimbConfig.EXTENDED_BOOST_SPEED) + (wallNormal * ClimbConfig.SOFT_PUSH_PRESSURE)
+        linVel.VectorVelocity = (root.CFrame.UpVector * ClimbConfig.EXTENDED_BOOST_SPEED) + (wallNormal * ClimbConfig.SOFT_PUSH_PRESSURE) + Vector3.new(8, 0, 0)
+        self.AnimationController.PlayAnimation("ParkourAnims", "ClimbBoostRAnim")
     end
     
     if sidewayInput == "A" then

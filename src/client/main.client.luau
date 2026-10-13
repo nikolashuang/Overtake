@@ -52,7 +52,7 @@ end)
 
 RunService.PreRender:Connect(function()
     UIController.UpdateMomentum(characterObject.MomentumUnit)
-    UIController.UpdateVelocities(characterObject.FreefallSpeed, characterObject.LastFallSpeed, characterObject.ForwardVelocity, characterObject.LastUpSpeed)
+    UIController.UpdateVelocities(characterObject.FreefallSpeed, characterObject.LastFallSpeed, math.abs(characterObject.ForwardVelocity), characterObject.LastUpSpeed)
 end)
 
 RunService.PreSimulation:Connect(function(deltaTime)

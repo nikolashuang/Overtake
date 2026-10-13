@@ -25,7 +25,10 @@ local AnimationStorage = {
         LeftWallDriftAnim = AnimationFolder.Parkour:FindFirstChild("LeftWallDrift"),
         RecoveryRollAnim = AnimationFolder.Parkour:FindFirstChild("RecoveryRoll"),
         LedgeHangAnim = AnimationFolder.Parkour:FindFirstChild("LedgeHang"),
-        MantleAnim = AnimationFolder.Parkour:FindFirstChild("Mantle")
+        MantleAnim = AnimationFolder.Parkour:FindFirstChild("Mantle"),
+        ClimbAnim = AnimationFolder.Parkour:FindFirstChild("Climb"),
+        ClimbBoostLAnim = AnimationFolder.Parkour:FindFirstChild("ClimbBoostLeft"),
+        ClimbBoostRAnim = AnimationFolder.Parkour:FindFirstChild("ClimbBoostRight"),
     }
 
 }
@@ -99,17 +102,18 @@ end
 
 --ANIMATION MISCELLANEOUS--
 
-local function doingDifferentMovementAction(characterObject)
-    if not characterObject.isSliding then return false end
-    if not characterObject.isInLedgeCatch then return false end
+local function otherActions(characterObject)
+    if characterObject.isSliding then return true end
+    if characterObject.isInLedgeCatch then return true end
+    if characterObject.ForwardVelocity < 12 then return true end
 
-    return true
+    return false
 end
 
 function AnimationController.UpdateMovementAnimation(characterObject)
     local characterState = characterObject.Humanoid:GetState()
 
-    if characterObject.Humanoid.MoveDirection.Magnitude <= 0 or characterState == Enum.HumanoidStateType.Jumping or characterState == Enum.HumanoidStateType.Freefall or doingDifferentMovementAction(characterObject) then
+    if characterObject.Humanoid.MoveDirection.Magnitude <= 0 or characterState == Enum.HumanoidStateType.Jumping or characterState == Enum.HumanoidStateType.Freefall or otherActions(characterObject) then
         AnimationController.StopAnimation("MovementAnims", "StartupAnim")
         AnimationController.StopAnimation("MovementAnims", "FullSprintAnim")
         AnimationController.StopAnimation("MovementAnims", "SprintAnim")
