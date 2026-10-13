@@ -6,7 +6,7 @@ local Players = game:GetService("Players")
 
 local ParkourDetection = require(RepStorage.Shared.Parkour.ParkourDetection)
 local ParkourController = require(script.Parent.Controllers.ParkourController)
-local ClientCharacter = require(RepStorage.Shared.Character.CharacterClass)
+local ClientCharacter = require(RepStorage.Shared.CharacterClass)
 local AnimationController = require(StarterPlr.StarterPlayerScripts.Controllers.AnimationController)
 local UIController = require(script.Parent.Controllers.UIController)
 local InputController = require(script.Parent.Controllers.InputController)
