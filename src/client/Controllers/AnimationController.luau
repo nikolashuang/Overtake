@@ -118,13 +118,12 @@ function AnimationController.UpdateMovementAnimation(characterObject)
         AnimationController.StopAnimation("MovementAnims", "FullSprintAnim")
         AnimationController.StopAnimation("MovementAnims", "SprintAnim")
         characterObject.currentMovementAnim = nil
-
-        if characterObject.isCrawling and not characterObject.isPlayingCrouch then
-            characterObject.isPlayingCrouch = true
-            characterObject.isPlayingCrouchMove = false
-            AnimationController.StopAnimation("MovementAnims", "CrouchMoveAnim")
-            AnimationController.PlayAnimation("MovementAnims", "CrouchIdleAnim")
-        end
+        return
+    elseif characterObject.Humanoid.MoveDirection.Magnitude <= 0 and characterObject.isCrawling and not characterObject.isPlayingCrouch then
+        characterObject.isPlayingCrouch = true
+        characterObject.isPlayingCrouchMove = false
+        AnimationController.StopAnimation("MovementAnims", "CrouchMoveAnim")
+        AnimationController.PlayAnimation("MovementAnims", "CrouchIdleAnim")
         return
     end
 
