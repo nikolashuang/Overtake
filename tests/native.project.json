@@ -1,0 +1,43 @@
+{
+  "name": "Overtake Native Authority Test",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "Shared": {
+        "$path": "../src/shared"
+      }
+    },
+    "ServerScriptService": {
+      "$path": "../src/server"
+    },
+    "StarterPlayer": {
+      "StarterPlayerScripts": {
+        "Controllers": {
+          "$path": "../src/client/Controllers"
+        },
+        "main": {
+          "$path": "../src/client/main.client.luau"
+        }
+      },
+      "$properties": {
+        "DevTouchMovementMode": "Scriptable",
+        "DevComputerMovementMode": "Scriptable"
+      }
+    },
+    "Workspace": {
+      "$properties": {
+        "AuthorityMode": "Server",
+        "NextGenerationReplication": "Enabled",
+        "PlayerScriptsUseInputActionSystem": "Enabled",
+        "UseFixedSimulation": "Enabled",
+        "SignalBehavior": "Deferred",
+        "StreamingEnabled": true
+      },
+      "$attributes": {
+        "OvertakeNativeAuthority": true,
+        "OvertakeDiagnostics": false,
+        "OvertakeTestCourse": true
+      }
+    }
+  }
+}

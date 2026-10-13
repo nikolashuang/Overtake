@@ -1,6 +1,5 @@
 local RepStorage = game:GetService("ReplicatedStorage")
-local RunService = game:GetService("RunService")
-local Debris = game:GetService("Debris")
+local MovementState = require(RepStorage.Shared.Simulation.MovementState)
 
 local ParkourDetection = require(RepStorage.Shared.Parkour.ParkourDetection)
 local ParkourConfig = require(RepStorage.Shared.Parkour.ParkourConfig)
@@ -12,126 +11,134 @@ local WallRunConfig = ParkourConfig.WallRun
 local RecoveryConfig = ParkourConfig.Recovery
 local ClimbConfig = ParkourConfig.Climbing
 
-local CharacterClass = {}
+local function safeUnit(vector, fallback)
+    return vector.Magnitude > 0.0001 and vector.Unit or fallback
+end
 
-CharacterClass.__index = CharacterClass
+local CharacterClass = {}
+CharacterClass.ConstraintNames = {
+    "VaultOrHurdle_AlignOrientation_1",
+    "VaultOrHurdle_LinearVelocity_1",
+    "Lunge_AlignOrientation_1",
+    "Lunge_LinearVelocity_1",
+    "StartWallRun_AlignOrientation_1",
+    "StartWallRun_AlignOrientation_2",
+    "StartWallRun_LinearVelocity_1",
+    "WallRedirect_LinearVelocity_1",
+    "RecoveryRoll_LinearVelocity_1",
+    "Climb_AlignOrientation_1",
+    "Climb_LinearVelocity_1",
+    "ExtendedClimbBoost_LinearVelocity_1",
+    "ExtendedClimbBoost_LinearVelocity_2",
+    "LedgeCatch_AlignPosition_1",
+    "LedgeCatch_AlignOrientation_1",
+    "ExitLedgeCatch_LinearVelocity_1",
+}
+
+
+-- Only immutable character references and per-frame ray results live in Luau tables.
+-- MovementState redirects all persistent gameplay fields to predicted attributes.
+CharacterClass.__index = function(self, key)
+    if MovementState.IsField(key) then return MovementState.Read(self.StateParts, key) end
+    return CharacterClass[key]
+end
+CharacterClass.__newindex = function(self, key, value)
+    if MovementState.IsField(key) then
+        MovementState.Write(self.StateParts, key, value)
+    else
+        rawset(self, key, value)
+    end
+end
 
 function CharacterClass.new(player, system)
-    local self = setmetatable({}, CharacterClass)
-
-    self.Player = player
-    self.Profile = system.Profile
-    self.AnimationController = system.AnimationController
-
-    self.Character = nil
-    self.Humanoid = nil
-    self.RootPart = nil
-    self.SlideCollider = nil
-
-    self.MomentumUnit = 0
-    self.FreefallSpeed = 0
-    self.ForwardVelocity = 0
-    self.RisingMomentum = MomentumConfig.MIN_RISING_MOMENTUM
-
-    self.Attributes = {}
-    self.Modifiers = {}
-
-    self.Staggered = false
-    self.Fatigue = false
-    self.HaltMomentum = false
-    self.Stationary = 0
-    self.traversalType = nil
-
-    self.traversalObj = nil
-    self.overHangExists = nil
-    self.SlideDirection = nil
-    self.isSliding = false
-    self.TempLockSliding = false
-    self.isCrawling = false
-    self.isPlayingCrouch = false
-    self.isPlayingCrouchMove = false
-
-    self.ableWallRun = false
-    self.WallObject = nil
-    self.WallDirection = nil
-    self.isWallRunning = false
-    self.nowWallDrifting = false
-    self.WallRunAlignment = nil
-    self.WallRunSpeed = nil
-    self.InWallRunTime = 0
-    self.isPlayingWallDrift = false
-    self.WallRunCD = WallRunConfig.WALL_RUN_CD
-
-    self.isClimbing = false
-    self.isInLedgeCatch = false
-    self.ClimbingAConsumed = false
-    self.ClimbingDConsumed = false
-    self.LedgeAlignPosition = nil
-    self.LedgeAlignOrientation = nil
-
-    self.LastLunge = 0
-    self.LastVault = 0
-    self.LastWallRun = 0
-    self.LastSlide = 0
-    self.LastClimb = 0
-    self.LastFallSpeed = 0
-    self.LastUpSpeed = 0
-    self.Landed = 0
-
-    self.currentMovementAnim = nil
-
-
-    return self
+    return setmetatable({Player = player, Profile = system and system.Profile}, CharacterClass)
 end
 
 function CharacterClass:isGrounded()
     return self.Humanoid.FloorMaterial ~= Enum.Material.Air
 end
 
-
 function CharacterClass:BindCharacter(character)
     self.Character = character
     self.Humanoid = character:WaitForChild("Humanoid")
     self.RootPart = character:WaitForChild("HumanoidRootPart")
-    self.Humanoid.WalkSpeed = MomentumConfig.MIN_MOVE_SPEED
-    self.Humanoid.JumpHeight = 2.25
-
-    self.MovementAttachment = Instance.new("Attachment")
-    self.MovementAttachment.Name = "MovementAttachment"
-    self.MovementAttachment.Parent = self.RootPart
-    
-    if RunService:IsServer() then
-
-        self.SlideCollider = Instance.new("Part")
-
-        local WeldConstraint = Instance.new("WeldConstraint")
-        WeldConstraint.Part0 = self.RootPart
-        WeldConstraint.Part1 = self.SlideCollider
-        WeldConstraint.Parent = self.RootPart
-
-        self.SlideCollider.Name = "SlideCollider"
-        self.SlideCollider.Parent = self.Character
-        self.SlideCollider.CanCollide = false
-        self.SlideCollider.Massless = true
-        self.SlideCollider.Position = self.RootPart.Position + Vector3.new(0, -2, 0)
-        self.SlideCollider.Size = Vector3.new(3.75, 2, 2.5)
-
-        if ParkourDetection.debugMode == false then
-            self.SlideCollider.Transparency = 1
-        else
-            self.SlideCollider.Transparency = 0.5
-        end
-
-    else
-        self.SlideCollider = self.Character:WaitForChild("SlideCollider")
+    self.MovementAttachment = self.RootPart:WaitForChild("MovementAttachment")
+    self.SlideCollider = character:WaitForChild("SlideCollider")
+    self.StateParts = {
+        self.RootPart:WaitForChild("MovementState1"),
+        self.RootPart:WaitForChild("MovementState2"),
+    }
+    self.Constraints = {}
+    for _, name in ipairs(CharacterClass.ConstraintNames) do
+        self.Constraints[name] = self.RootPart:WaitForChild(name)
     end
-
-    self.Humanoid.StateChanged:Connect(function(oldState, newState)
-        if newState == Enum.HumanoidStateType.Freefall then
-            self.LastUpSpeed = self.RootPart.AssemblyLinearVelocity.Y
+    self.WallRunAlignment = self.Constraints.StartWallRun_AlignOrientation_1
+    self.LedgeAlignPosition = self.Constraints.LedgeCatch_AlignPosition_1
+    self.LedgeAlignOrientation = self.Constraints.LedgeCatch_AlignOrientation_1
+    self.CollisionParts = {}
+    for _, part in ipairs(character:GetChildren()) do
+        if part:IsA("BasePart") and part ~= self.SlideCollider then
+            table.insert(self.CollisionParts, {Part = part, Normal = part:GetAttribute("OvertakeNormalCollision") == true})
         end
-    end)
+    end
+    self.AnimationController = {
+        PlayAnimation = function(group, name) self:EmitAnimation(group, name) end,
+        StopAnimation = function() end,
+        PlayStartWallRun = function()
+            self:EmitAnimation("ParkourAnims", self.WallDirection == "Right" and "RightStartWallRunAnim" or "LeftStartWallRunAnim")
+        end,
+    }
+end
 
+function CharacterClass:EmitAnimation(group, name)
+    self.AnimationGroup = group
+    self.AnimationName = name
+    self.AnimationSequence += 1
+end
+
+function CharacterClass:GetConstraint(name)
+    local constraint = self.Constraints[name]
+    local singleton = name == "StartWallRun_AlignOrientation_1"
+        or name == "LedgeCatch_AlignPosition_1" or name == "LedgeCatch_AlignOrientation_1"
+    if constraint.Enabled and not singleton then
+        -- Preserve overlapping activations (rapid redirects/re-entry). The
+        -- native engine stitches clones created by this shared simulation code.
+        -- Pool identities are looked up afresh, never cached in a Luau table.
+        local index = 1
+        while true do
+            local poolName = name .. "_Pool" .. index
+            local pooled = self.RootPart:FindFirstChild(poolName)
+            if not pooled then
+                pooled = constraint:Clone()
+                pooled.Name = poolName
+                pooled:SetAttribute("ExpiresAt", 0)
+                pooled.Parent = self.RootPart
+            end
+            if not pooled.Enabled or pooled:GetAttribute("ExpiresAt") == 0 then
+                constraint = pooled
+                break
+            end
+            index += 1
+        end
+    end
+    constraint:SetAttribute("ExpiresAt", 0)
+    constraint.Enabled = true
+    return constraint
+end
+
+function CharacterClass:ExpireConstraint(constraint, duration)
+    constraint:SetAttribute("ExpiresAt", time() + duration)
+end
+
+function CharacterClass:UpdateConstraintLifetimes()
+    for _, constraint in ipairs(self.RootPart:GetChildren()) do
+        if constraint:GetAttribute("MovementLifetime") ~= true then continue end
+        local deadline = constraint:GetAttribute("ExpiresAt")
+        if deadline and deadline > 0 and time() >= deadline then
+            constraint.Enabled = false
+            constraint:SetAttribute("ExpiresAt", 0)
+        end
+    end
 end
 
 function CharacterClass:UpdateMomentum(deltaTime)
@@ -143,7 +150,7 @@ function CharacterClass:UpdateMomentum(deltaTime)
 
         if self.HaltMomentum then
             self.Stationary = 0
-        
+
         elseif isMoving and math.abs(self.ForwardVelocity) > 10 then
             self.Stationary = 0
             self.MomentumUnit = math.min(MomentumConfig.MAX_MOMENTUM, self.MomentumUnit + self.RisingMomentum * deltaTime)
@@ -192,30 +199,20 @@ function CharacterClass:ConsumeMomentum(value, deltaTime)
     self.MomentumUnit = math.max(MomentumConfig.MIN_MOMENTUM, self.MomentumUnit - value * (deltaTime or 1))
 end
 
-local slidePartsCollision = {
-    UpperRightLeg = false,
-    UpperLeftLeg = false,
-    LowerRightLeg = false,
-    LowerLeftLeg = false
-}
-
 function CharacterClass:ChangeSlideCollision(enabled)
-    for _, part in pairs(self.Character:GetChildren()) do
-        if part:IsA("Part") and part ~= self.SlideCollider and not slidePartsCollision[part.Name] then
-            part.CanCollide = not enabled
-        end
+    for _, entry in ipairs(self.CollisionParts) do
+        entry.Part.CanCollide = not enabled and entry.Normal
     end
-
     self.SlideCollider.CanCollide = enabled
 end
 
 function CharacterClass:UpdateObject()
-    --Too lazy to change all variable names but Vault Distance is now any Forward Traversal distance
+    -- The original momentum-scaled distance also drives climb and ledge detection.
     local momentumPercent = math.clamp((self.MomentumUnit / MomentumConfig.MAX_MOMENTUM), 0, 1)
     local vaultDistance = VaultConfig.MIN_VAULT_DISTANCE + (VaultConfig.MAX_VAULT_DISTANCE - VaultConfig.MIN_VAULT_DISTANCE) * momentumPercent
 
     local traversalObj, traversalType = ParkourDetection.DetectObstacle(self.Character, vaultDistance)
-    
+
     self.traversalObj = traversalObj
     self.traversalType = traversalType
 end
@@ -233,7 +230,7 @@ function CharacterClass:CanVault()
     if self.isCrawling then return false end
     if not self:isGrounded() then return false end
     if time() - self.LastVault < VaultConfig.VAULT_CD then return false end
-    
+
     return true
 end
 
@@ -243,20 +240,21 @@ function CharacterClass:VaultOrHurdle()
 
     hum.Jump = false
     self.LastVault = time()
+    self.VaultMomentumHold = false
 
-    local align = Instance.new("AlignOrientation")
+    local align = self:GetConstraint("VaultOrHurdle_AlignOrientation_1")
     align.Attachment0 = self.MovementAttachment
     align.Mode = Enum.OrientationAlignmentMode.OneAttachment
     align.RigidityEnabled = true
 
-    local linVel = Instance.new("LinearVelocity")
+    local linVel = self:GetConstraint("VaultOrHurdle_LinearVelocity_1")
     linVel.Attachment0 = self.MovementAttachment
     linVel.RelativeTo = Enum.ActuatorRelativeTo.World
     linVel.ForceLimitsEnabled = false
 
     local currentVelocity = root.AssemblyLinearVelocity
     local look = root.CFrame.LookVector
-    local flatLook = Vector3.new(look.X, 0, look.Z).Unit
+    local flatLook = safeUnit(Vector3.new(look.X, 0, look.Z), Vector3.zAxis)
     local obstalceHeight = self.traversalObj.Instance.Size.Y
 
     local forwardSpeed = math.max(currentVelocity:Dot(flatLook), VaultConfig.MIN_VAULT_SPEED)
@@ -270,6 +268,7 @@ function CharacterClass:VaultOrHurdle()
             self.AnimationController.PlayAnimation("ParkourAnims", "VaultVariant1")
             self:ConsumeMomentum(VaultConfig.TALL_VAULT_CONSUMPTION)
             self.HaltMomentum = true
+            self.VaultMomentumHold = true
         end
         align.CFrame = CFrame.lookAt(Vector3.zero, flatLook)
         hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
@@ -280,16 +279,11 @@ function CharacterClass:VaultOrHurdle()
         self.AnimationController.PlayAnimation("ParkourAnims", "HurdleAnim")
     end
 
-    linVel.Parent = root
-    align.Parent = root
 
-    Debris:AddItem(linVel, 0.2)
-    Debris:AddItem(align, 0.2)
+    self:ExpireConstraint(linVel, 0.2)
+    self:ExpireConstraint(align, 0.2)
 
-    task.delay(VaultConfig.VAULT_DURATION, function()
-        hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
-        if self.HaltMomentum then self.HaltMomentum = false end
-    end)
+    self.VaultReleaseAt = time() + VaultConfig.VAULT_DURATION
 
 end
 
@@ -314,19 +308,19 @@ function CharacterClass:Lunge()
     self.LastLunge = time()
     self.HaltMomentum = true
 
-    local align = Instance.new("AlignOrientation")
+    local align = self:GetConstraint("Lunge_AlignOrientation_1")
     align.Attachment0 = self.MovementAttachment
     align.Mode = Enum.OrientationAlignmentMode.OneAttachment
     align.RigidityEnabled = true
 
-    local linVel = Instance.new("LinearVelocity")
+    local linVel = self:GetConstraint("Lunge_LinearVelocity_1")
     linVel.Attachment0 = self.MovementAttachment
     linVel.RelativeTo = Enum.ActuatorRelativeTo.World
     linVel.ForceLimitsEnabled = false
 
     local currentVelocity = root.AssemblyLinearVelocity
     local look = root.CFrame.LookVector
-    local flatLook = Vector3.new(look.X, 0, look.Z).Unit
+    local flatLook = safeUnit(Vector3.new(look.X, 0, look.Z), Vector3.zAxis)
     local forwardSpeed = currentVelocity:Dot(flatLook)
 
     linVel.VectorVelocity = flatLook * (forwardSpeed + BoostConfig.LUNGE_POWER) + Vector3.new(0, BoostConfig.LUNGE_HEIGHT, 0)
@@ -336,16 +330,11 @@ function CharacterClass:Lunge()
     self:ConsumeMomentum(BoostConfig.LUNGE_CONSUMPTION)
     self.AnimationController.PlayAnimation("MovementAnims", "LungeAnim")
 
-    linVel.Parent = root
-    align.Parent = root
 
-    Debris:AddItem(linVel, 0.3)
-    Debris:AddItem(align, 0.3)
+    self:ExpireConstraint(linVel, 0.3)
+    self:ExpireConstraint(align, 0.3)
 
-    task.delay(0.5, function()
-        hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
-        self.HaltMomentum = false
-    end)
+    self.JumpReleaseAt = time() + 0.5
 
 end
 
@@ -365,7 +354,7 @@ end
 
 function CharacterClass:Slide()
     self.isSliding = true
-    self.SlideDirection = self.Humanoid.MoveDirection.Unit
+    self.SlideDirection = safeUnit(self.Humanoid.MoveDirection, self.RootPart.CFrame.LookVector)
     self.HaltMomentum = true
     self.LastSlide = time()
 
@@ -394,7 +383,7 @@ end
 
 function CharacterClass:CheckOverHang()
     local overHang = ParkourDetection.DetectSlideOverHang(self.Character, 3.5)
-    if not overHang then 
+    if not overHang then
         self.overHangExists = false
         return
     end
@@ -446,7 +435,7 @@ function CharacterClass:StartWallRun()
     self.WallRunCD = WallRunConfig.WALL_RUN_CD
 
 
-    self.WallRunAlignment = Instance.new("AlignOrientation")
+    self.WallRunAlignment = self:GetConstraint("StartWallRun_AlignOrientation_1")
     self.WallRunAlignment.Attachment0 = self.MovementAttachment
     self.WallRunAlignment.Mode = Enum.OrientationAlignmentMode.OneAttachment
     self.WallRunAlignment.RigidityEnabled = false
@@ -454,19 +443,19 @@ function CharacterClass:StartWallRun()
     self.WallRunAlignment.MaxTorque = 50000
     self.WallRunAlignment.MaxAngularVelocity = 12
 
-    local align = Instance.new("AlignOrientation")
+    local align = self:GetConstraint("StartWallRun_AlignOrientation_2")
     align.Attachment0 = self.MovementAttachment
     align.Mode = Enum.OrientationAlignmentMode.OneAttachment
     align.RigidityEnabled = true
 
-    local linVel = Instance.new("LinearVelocity")
+    local linVel = self:GetConstraint("StartWallRun_LinearVelocity_1")
     linVel.Attachment0 = self.MovementAttachment
     linVel.RelativeTo = Enum.ActuatorRelativeTo.World
     linVel.ForceLimitsEnabled = false
 
     local currentSpeed = root.AssemblyLinearVelocity
     local look = root.CFrame.LookVector
-    local flatLook = Vector3.new(look.X, 0, look.Z).Unit
+    local flatLook = safeUnit(Vector3.new(look.X, 0, look.Z), Vector3.zAxis)
     local forwardSpeed = currentSpeed:Dot(flatLook)
 
     linVel.VectorVelocity = flatLook * forwardSpeed + Vector3.new(0, WallRunConfig.INIT_WALLRUN_HEIGHT_BOOST, 0)
@@ -474,12 +463,8 @@ function CharacterClass:StartWallRun()
 
     self.AnimationController.PlayStartWallRun(self)
 
-    linVel.Parent = root
-    align.Parent = root
-    self.WallRunAlignment.Parent = root
-
-    Debris:AddItem(linVel, 0.3)
-    Debris:AddItem(align, 0.3)
+    self:ExpireConstraint(linVel, 0.3)
+    self:ExpireConstraint(align, 0.3)
 
 end
 
@@ -501,7 +486,7 @@ function CharacterClass:UpdateWallRun(wInput, deltaTime)
     local attachPressure = WallRunConfig.WALL_ATTACH_PRESSURE
 
     local tangent = Vector3.yAxis:Cross(wallNormal).Unit
-    local horizontalVelocity = Vector3.new(currentVelocity.X, 0, currentVelocity.Z).Unit
+    local horizontalVelocity = safeUnit(Vector3.new(currentVelocity.X, 0, currentVelocity.Z), root.CFrame.LookVector)
 
     if tangent:Dot(horizontalVelocity) < 0 then
         tangent = -tangent
@@ -530,7 +515,7 @@ function CharacterClass:EndWallRun()
 
     self.isWallRunning = false
     self.nowWallDrifting = false
-    self.isPlayingWallDrift = false
+
     self.HaltMomentum = false
     self.WallObject = nil
     self.WallDirection = nil
@@ -539,17 +524,19 @@ function CharacterClass:EndWallRun()
     self.LastWallRun = time()
 
     if self.WallRunAlignment then
-        self.WallRunAlignment:Destroy()
-        self.WallRunAlignment = nil
+        self.WallRunAlignment.Enabled = false
+
     end
 
     humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
 end
 
 function CharacterClass:WallRedirect(inputKey)
+    if not ((inputKey == "A" and self.WallDirection == "Right")
+        or (inputKey == "D" and self.WallDirection == "Left")) then return end
     local root = self.RootPart
 
-    local linVel = Instance.new("LinearVelocity")
+    local linVel = self:GetConstraint("WallRedirect_LinearVelocity_1")
     linVel.Attachment0 = self.MovementAttachment
     linVel.RelativeTo = Enum.ActuatorRelativeTo.World
     linVel.ForceLimitsEnabled = false
@@ -565,9 +552,8 @@ function CharacterClass:WallRedirect(inputKey)
     end
 
     self.WallRunCD = 0--refresh cd on wallredirect
-    linVel.Parent = root
 
-    Debris:AddItem(linVel, 0.3)
+    self:ExpireConstraint(linVel, 0.3)
 
 end
 
@@ -587,13 +573,12 @@ function CharacterClass:RecoveryRoll(timing)
     local root = self.RootPart
 
     local currentVelocity = root.AssemblyLinearVelocity
-    local linVel = Instance.new("LinearVelocity")
+    local linVel = self:GetConstraint("RecoveryRoll_LinearVelocity_1")
     linVel.Attachment0 = self.MovementAttachment
     linVel.RelativeTo = Enum.ActuatorRelativeTo.World
     linVel.ForceLimitsEnabled = false
-    linVel.Parent = root
 
-    local flatLook = Vector3.new(root.CFrame.LookVector.X, 0, root.CFrame.LookVector.Z).Unit
+    local flatLook = safeUnit(Vector3.new(root.CFrame.LookVector.X, 0, root.CFrame.LookVector.Z), Vector3.zAxis)
     local forwardSpeed = math.max(currentVelocity:Dot(flatLook), RecoveryConfig.MIN_ROLL_SPEED)
 
     if timing >= RecoveryConfig.PERFECT_ROLL_WINDOW and timing <= RecoveryConfig.ROLL_WINDOW then
@@ -603,7 +588,7 @@ function CharacterClass:RecoveryRoll(timing)
     linVel.VectorVelocity = flatLook * forwardSpeed
     self.AnimationController.PlayAnimation("ParkourAnims", "RecoveryRollAnim")
 
-    Debris:AddItem(linVel, 0.3)
+    self:ExpireConstraint(linVel, 0.3)
 
 end
 
@@ -631,34 +616,30 @@ function CharacterClass:Climb()
 
     local wallNoraml = self.traversalObj.Normal
 
-    local align = Instance.new("AlignOrientation")
+    local align = self:GetConstraint("Climb_AlignOrientation_1")
     align.Attachment0 = self.MovementAttachment
     align.Mode = Enum.OrientationAlignmentMode.OneAttachment
     align.RigidityEnabled = true
-    align.Parent = root
 
-    local linVel = Instance.new("LinearVelocity")
+    local linVel = self:GetConstraint("Climb_LinearVelocity_1")
     linVel.Attachment0 = self.MovementAttachment
     linVel.RelativeTo = Enum.ActuatorRelativeTo.World
     linVel.ForceLimitsEnabled = false
-    linVel.Parent = root
 
     local look = root.CFrame.LookVector
-    local flatLook = Vector3.new(look.X, 0, look.Z).Unit
+    local flatLook = safeUnit(Vector3.new(look.X, 0, look.Z), Vector3.zAxis)
 
     linVel.VectorVelocity = (Vector3.yAxis * ClimbConfig.NORMAL_CLIMB_SPEED) + (-wallNoraml * ClimbConfig.SOFT_PUSH_PRESSURE)
     align.CFrame = CFrame.lookAt(Vector3.zero, flatLook)
 
-    Debris:AddItem(linVel, 0.85)
-    Debris:AddItem(align, 0.85)
+    self:ExpireConstraint(linVel, 0.85)
+    self:ExpireConstraint(align, 0.85)
 
     self.LastClimb = time()
 
     self.AnimationController.PlayAnimation("ParkourAnims", "ClimbAnim")
 
-    task.delay(0.5, function()
-        humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
-    end)
+    self.JumpReleaseAt = time() + 0.5
 
 end
 
@@ -675,11 +656,11 @@ function CharacterClass:ExtendedClimbBoost(sidewayInput)
 
     local wallNormal = self.traversalObj.Normal
 
-    local linVel = Instance.new("LinearVelocity")
+    local linVel = self:GetConstraint(sidewayInput == "A"
+        and "ExtendedClimbBoost_LinearVelocity_1" or "ExtendedClimbBoost_LinearVelocity_2")
     linVel.Attachment0 = self.MovementAttachment
     linVel.RelativeTo = Enum.ActuatorRelativeTo.World
     linVel.ForceLimitsEnabled = false
-    linVel.Parent = root
 
     if not self.ClimbingAConsumed and sidewayInput == "A" then
         linVel.VectorVelocity = (root.CFrame.UpVector * ClimbConfig.EXTENDED_BOOST_SPEED) + (wallNormal * ClimbConfig.SOFT_PUSH_PRESSURE) + Vector3.new(-8, 0, 0)
@@ -688,14 +669,14 @@ function CharacterClass:ExtendedClimbBoost(sidewayInput)
         linVel.VectorVelocity = (root.CFrame.UpVector * ClimbConfig.EXTENDED_BOOST_SPEED) + (wallNormal * ClimbConfig.SOFT_PUSH_PRESSURE) + Vector3.new(8, 0, 0)
         self.AnimationController.PlayAnimation("ParkourAnims", "ClimbBoostRAnim")
     end
-    
+
     if sidewayInput == "A" then
         self.ClimbingAConsumed = true
     elseif sidewayInput == "D" then
         self.ClimbingDConsumed = true
     end
 
-    Debris:AddItem(linVel, 0.25)
+    self:ExpireConstraint(linVel, 0.25)
 end
 
 function CharacterClass:CanLedgeCatch()
@@ -715,20 +696,18 @@ function CharacterClass:LedgeCatch()
 
     self.isInLedgeCatch = true
 
-    self.LedgeAlignPosition = Instance.new("AlignPosition")
+    self.LedgeAlignPosition = self:GetConstraint("LedgeCatch_AlignPosition_1")
     self.LedgeAlignPosition.Attachment0 = self.MovementAttachment
     self.LedgeAlignPosition.Mode = Enum.PositionAlignmentMode.OneAttachment
     self.LedgeAlignPosition.RigidityEnabled = true
-    self.LedgeAlignPosition.Parent = root
 
-    self.LedgeAlignOrientation = Instance.new("AlignOrientation")
+    self.LedgeAlignOrientation = self:GetConstraint("LedgeCatch_AlignOrientation_1")
     self.LedgeAlignOrientation.Attachment0 = self.MovementAttachment
     self.LedgeAlignOrientation.Mode = Enum.OrientationAlignmentMode.OneAttachment
     self.LedgeAlignOrientation.RigidityEnabled = true
-    self.LedgeAlignOrientation.Parent = root
-    
+
     local look = self.traversalObj.Normal
-    local flatLook = Vector3.new(look.X, 0, look.Z).Unit
+    local flatLook = safeUnit(Vector3.new(look.X, 0, look.Z), Vector3.zAxis)
 
 
     root.CFrame = precisePosition
@@ -746,22 +725,22 @@ end
 function CharacterClass:ExitLedgeCatch(input)
     local root = self.RootPart
 
-    self.LedgeAlignOrientation:Destroy()
-    self.LedgeAlignPosition:Destroy()
-    
+    self.LedgeAlignOrientation.Enabled = false
+    self.LedgeAlignPosition.Enabled = false
+
     if input == "Space" then
-        local linVel = Instance.new("LinearVelocity")
-        linVel.Parent = root
+        local linVel = self:GetConstraint("ExitLedgeCatch_LinearVelocity_1")
+
         linVel.Attachment0 = self.MovementAttachment
         linVel.RelativeTo = Enum.ActuatorRelativeTo.World
         linVel.ForceLimitsEnabled = false
 
         local look = root.CFrame.LookVector
-        local flatLook = Vector3.new(look.X, 0, look.Z).Unit
+        local flatLook = safeUnit(Vector3.new(look.X, 0, look.Z), Vector3.zAxis)
 
-    
+
         linVel.VectorVelocity = flatLook * 20 + Vector3.new(0, 15, 0)
-        Debris:AddItem(linVel, 0.2)
+        self:ExpireConstraint(linVel, 0.2)
     end
 
     self.isInLedgeCatch = false

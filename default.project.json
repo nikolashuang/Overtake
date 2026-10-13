@@ -2,26 +2,37 @@
   "name": "Overtake",
   "tree": {
     "$className": "DataModel",
-
     "ReplicatedStorage": {
       "Shared": {
         "$path": "src/shared"
       }
     },
-
     "ServerScriptService": {
       "$path": "src/server"
     },
-
     "StarterPlayer": {
       "StarterPlayerScripts": {
-        "$path": "src/client"
+        "Controllers": {
+          "$path": "src/client/Controllers"
+        },
+        "main": {
+          "$path": "src/client/main.client.luau"
+        }
+      },
+      "$properties": {
+        "DevTouchMovementMode": "Scriptable",
+        "DevComputerMovementMode": "Scriptable"
       }
     },
-
     "Workspace": {
       "$properties": {
-        "FilteringEnabled": true
+        "FilteringEnabled": true,
+        "AuthorityMode": "Server",
+        "NextGenerationReplication": "Enabled",
+        "PlayerScriptsUseInputActionSystem": "Enabled",
+        "UseFixedSimulation": "Enabled",
+        "SignalBehavior": "Deferred",
+        "StreamingEnabled": true
       },
       "Baseplate": {
         "$className": "Part",
@@ -44,6 +55,11 @@
             512
           ]
         }
+      },
+      "$attributes": {
+        "OvertakeDiagnostics": false,
+        "OvertakeNativeAuthority": true,
+        "OvertakeTestCourse": false
       }
     },
     "Lighting": {
