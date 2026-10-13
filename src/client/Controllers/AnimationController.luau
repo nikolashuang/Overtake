@@ -105,7 +105,7 @@ end
 local function otherActions(characterObject)
     if characterObject.isSliding then return true end
     if characterObject.isInLedgeCatch then return true end
-    if characterObject.ForwardVelocity < 12 then return true end
+    if characterObject.ForwardVelocity < 12 and not characterObject.isCrawling then return true end
 
     return false
 end
@@ -113,32 +113,36 @@ end
 function AnimationController.UpdateMovementAnimation(characterObject)
     local characterState = characterObject.Humanoid:GetState()
 
-    if characterObject.Humanoid.MoveDirection.Magnitude <= 0 or characterState == Enum.HumanoidStateType.Jumping or characterState == Enum.HumanoidStateType.Freefall or otherActions(characterObject) then
+    if (characterObject.Humanoid.MoveDirection.Magnitude <= 0 and not characterObject.isCrawling) or characterState == Enum.HumanoidStateType.Jumping or characterState == Enum.HumanoidStateType.Freefall or otherActions(characterObject) then
         AnimationController.StopAnimation("MovementAnims", "StartupAnim")
         AnimationController.StopAnimation("MovementAnims", "FullSprintAnim")
         AnimationController.StopAnimation("MovementAnims", "SprintAnim")
         characterObject.currentMovementAnim = nil
-
-        if characterObject.isCrawling and not characterObject.isPlayingCrouch then
-            characterObject.isPlayingCrouch = true
-            characterObject.isPlayingCrouchMove = false
-            AnimationController.StopAnimation("MovementAnims", "CrouchMoveAnim")
-            AnimationController.PlayAnimation("MovementAnims", "CrouchIdleAnim")
-        end
         return
     end
 
     if characterObject.isCrawling then
-        if not characterObject.isPlayingCrouchMove then
-            characterObject.isPlayingCrouch = false
-            characterObject.isPlayingCrouchMove = true
-            AnimationController.StopAnimation("MovementAnims", "CrouchIdleAnim")
-            AnimationController.PlayAnimation("MovementAnims", "CrouchMoveAnim")
+        if characterObject.Humanoid.MoveDirection.Magnitude > 0 then
+            if not characterObject.isPlayingCrouchMove then
+                characterObject.isPlayingCrouch = false
+                characterObject.isPlayingCrouchMove = true
+                AnimationController.StopAnimation("MovementAnims", "CrouchIdleAnim")
+                AnimationController.PlayAnimation("MovementAnims", "CrouchMoveAnim")
+            end
+        else
+            if not characterObject.isPlayingCrouch then
+                characterObject.isPlayingCrouch = true
+                characterObject.isPlayingCrouchMove = false
+                AnimationController.StopAnimation("MovementAnims", "CrouchMoveAnim")
+                AnimationController.PlayAnimation("MovementAnims", "CrouchIdleAnim")
+            end
         end
         return
     else
         characterObject.isPlayingCrouchMove = false
+        characterObject.isPlayingCrouch = false
         AnimationController.StopAnimation("MovementAnims", "CrouchMoveAnim")
+        AnimationController.StopAnimation("MovementAnims", "CrouchIdleAnim")
     end
 
     local newAnim = nil
