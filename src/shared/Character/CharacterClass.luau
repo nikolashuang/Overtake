@@ -723,13 +723,13 @@ function CharacterClass:LedgeCatch()
     self.LedgeAlignOrientation.RigidityEnabled = true
     self.LedgeAlignOrientation.Parent = root
     
-    local look = root.CFrame.LookVector
+    local look = self.traversalObj.Normal
     local flatLook = Vector3.new(look.X, 0, look.Z).Unit
 
 
     root.CFrame = precisePosition
     self.LedgeAlignPosition.Position = root.Position
-    self.LedgeAlignOrientation.CFrame = CFrame.lookAt(Vector3.zero, flatLook)
+    self.LedgeAlignOrientation.CFrame = CFrame.lookAt(Vector3.zero, -flatLook)
 
     if self.FreefallSpeed < 0 then
         self:ConsumeMomentum(self.MomentumUnit * 0.75)
@@ -742,21 +742,23 @@ function CharacterClass:ExitLedgeCatch(input)
 
     self.LedgeAlignOrientation:Destroy()
     self.LedgeAlignPosition:Destroy()
-    self.isInLedgeCatch = false
     
-    local linVel = Instance.new("LinearVelocity")
-    linVel.Parent = root
-    linVel.Attachment0 = self.MovementAttachment
-    linVel.RelativeTo = Enum.ActuatorRelativeTo.World
-    linVel.ForceLimitsEnabled = false
-
-    local look = root.CFrame.LookVector
-    local flatLook = Vector3.new(look.X, 0, look.Z).Unit
-
     if input == "Space" then
+        local linVel = Instance.new("LinearVelocity")
+        linVel.Parent = root
+        linVel.Attachment0 = self.MovementAttachment
+        linVel.RelativeTo = Enum.ActuatorRelativeTo.World
+        linVel.ForceLimitsEnabled = false
+
+        local look = root.CFrame.LookVector
+        local flatLook = Vector3.new(look.X, 0, look.Z).Unit
+
+    
         linVel.VectorVelocity = flatLook * 20 + Vector3.new(0, 15, 0)
         Debris:AddItem(linVel, 0.2)
     end
+
+    self.isInLedgeCatch = false
 end
 
 

@@ -69,7 +69,6 @@ RunService.PreSimulation:Connect(function(deltaTime)
 
     if characterObject:CanLedgeCatch() and not characterObject.isInLedgeCatch and (time() - ParkourController.spaceInputBuffer < ParkourController.ledgeWindow) then
         ParkourController.AttemptLedgeCatch()
-        characterObject.isInLedgeCatch = true
     end
 
     AnimationController.UpdateMovementAnimation(characterObject)

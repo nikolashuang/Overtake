@@ -58,7 +58,7 @@ local ParkourConfig = {
         MIN_FALL_SPEED_TO_CLIMB = -65,
         CLIMB_CD = 0.75,
         SIDEWAY_INPUT_WINDOW = 0.2,
-        LEDGE_CATCH_WINDOW = 0.4
+        LEDGE_CATCH_WINDOW = 0.15
     }
 
 
