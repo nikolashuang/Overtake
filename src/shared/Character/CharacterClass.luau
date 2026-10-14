@@ -2,8 +2,8 @@ local RepStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local Debris = game:GetService("Debris")
 
-local ParkourDetection = require(RepStorage.Shared.Parkour.ParkourDetection)
-local ParkourConfig = require(RepStorage.Shared.Parkour.ParkourConfig)
+local ParkourDetection = require(RepStorage.Shared.Character.ParkourDetection)
+local ParkourConfig = require(RepStorage.Shared.Character.ParkourConfig)
 
 local VaultConfig = ParkourConfig.Vault
 local MomentumConfig = ParkourConfig.Momentum

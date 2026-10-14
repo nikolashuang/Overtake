@@ -1,6 +1,6 @@
 local RepStorage = game:GetService("ReplicatedStorage")
 
-local ParkourConfig = require(RepStorage.Shared.Parkour.ParkourConfig)
+local ParkourConfig = require(RepStorage.Shared.Character.ParkourConfig)
 local BoostConfig = ParkourConfig.Boost
 local RecoveryConfig = ParkourConfig.Recovery
 local ClimbConfig = ParkourConfig.Climbing

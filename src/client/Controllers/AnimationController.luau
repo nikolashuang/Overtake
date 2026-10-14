@@ -1,5 +1,5 @@
 local RepStorage = game:GetService("ReplicatedStorage")
-local ParkourConfig = require(RepStorage.Shared.Parkour.ParkourConfig)
+local ParkourConfig = require(RepStorage.Shared.Character.ParkourConfig)
 local AnimationFolder = RepStorage.Animations
 local MomentumConfig = ParkourConfig.Momentum
 

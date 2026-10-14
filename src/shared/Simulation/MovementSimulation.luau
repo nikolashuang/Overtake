@@ -1,7 +1,7 @@
 local RepStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local CharacterClass = require(RepStorage.Shared.CharacterClass)
+local CharacterClass = require(RepStorage.Shared.Character.CharacterClass)
 
 local isServer = RunService:IsServer()
 local LocalPlayer = Players.LocalPlayer
