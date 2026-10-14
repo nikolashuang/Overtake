@@ -35,6 +35,7 @@ function CharacterClass.new(player, system)
 
     self.Attributes = {}
     self.Modifiers = {}
+    self.StateParts = {}
 
     self.Staggered = false
     self.Fatigue = false
@@ -91,47 +92,17 @@ end
 
 function CharacterClass:BindCharacter(character)
     self.Character = character
-    self.Humanoid = character:WaitForChild("Humanoid")
+
     self.RootPart = character:WaitForChild("HumanoidRootPart")
-    self.Humanoid.WalkSpeed = MomentumConfig.MIN_MOVE_SPEED
-    self.Humanoid.JumpHeight = 2.25
+    self.Humanoid = character:WaitForChild("Humanoid")
 
-    self.MovementAttachment = Instance.new("Attachment")
-    self.MovementAttachment.Name = "MovementAttachment"
-    self.MovementAttachment.Parent = self.RootPart
-    
-    if RunService:IsServer() then
+    self.MovementAttachment = self.RootPart:WaitForChild("MovementAttachment")
+    self.SlideCollider = character:WaitForChild("SlideCollider")
 
-        self.SlideCollider = Instance.new("Part")
-
-        local WeldConstraint = Instance.new("WeldConstraint")
-        WeldConstraint.Part0 = self.RootPart
-        WeldConstraint.Part1 = self.SlideCollider
-        WeldConstraint.Parent = self.RootPart
-
-        self.SlideCollider.Name = "SlideCollider"
-        self.SlideCollider.Parent = self.Character
-        self.SlideCollider.CanCollide = false
-        self.SlideCollider.Massless = true
-        self.SlideCollider.Position = self.RootPart.Position + Vector3.new(0, -2, 0)
-        self.SlideCollider.Size = Vector3.new(3.75, 2, 2.5)
-
-        if ParkourDetection.debugMode == false then
-            self.SlideCollider.Transparency = 1
-        else
-            self.SlideCollider.Transparency = 0.5
-        end
-
-    else
-        self.SlideCollider = self.Character:WaitForChild("SlideCollider")
-    end
-
-    self.Humanoid.StateChanged:Connect(function(oldState, newState)
-        if newState == Enum.HumanoidStateType.Freefall then
-            self.LastUpSpeed = self.RootPart.AssemblyLinearVelocity.Y
-        end
-    end)
-
+    self.StateParts = {
+        self.RootPart:WaitForChild("MovementState1"),
+        self.RootPart:WaitForChild("MovementState2")
+    }
 end
 
 function CharacterClass:UpdateMomentum(deltaTime)

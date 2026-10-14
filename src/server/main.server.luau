@@ -1,64 +1,56 @@
-local RunService = game:GetService("RunService")
-local ServerScriptService = game:GetService("ServerScriptService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
+local ServerService = game:GetService("ServerScriptService")
+local RepStorage = game:GetService("ReplicatedStorage")
 
-local PlayerProfile = require(ServerScriptService.PlayerProfile.ProfileService)
-local CharacterClass = require(ReplicatedStorage.Shared.CharacterClass)
-local MovementSimulation = require(ReplicatedStorage.Shared.Simulation.MovementSimulation)
+local PlayerProfile = require(ServerService.PlayerProfile.ProfileService)
+local CharacterClass = require(RepStorage.Shared.Character.CharacterClass)
+local MovementSimulation = require(RepStorage.Shared.Simulation.MovementSimulation)
 
 local Characters = {}
 
 MovementSimulation.Init()
 
-
-Players.PlayerAdded:Connect(function(player)
+local function setUpPlayer(player)
     local profile = PlayerProfile.LoadProfile(player)
 
     if not profile then
-        player:Kick("Failed to load your progress. Please rejoin.")
-        return
+        player:Kick("Failed to load your progress. Please rejoin")
     end
 
-    local plrCharacter = CharacterClass.new(player, profile)
+    local function setUpCharacter(character)
+        MovementSimulation.UnregisterPlayer(player)
+        MovementSimulation.PreparePlayer(player, character)
 
-    if player.Character then
-        plrCharacter:BindCharacter(player.Character)
+        local characterObject = CharacterClass.new(player, profile)
+        characterObject:BindCharacter(character)
+
+        Characters[player] = characterObject
+        MovementSimulation.RegisterCharacter(player, characterObject)
     end
 
-    player.CharacterAdded:Connect(function(character)
-        plrCharacter:BindCharacter(character)
+    player.CharacterAdded:Connect(setUpCharacter)
+
+    player.CharacterRemoving:Connect(function()
+        MovementSimulation.UnregisterCharacter(player)
+        Characters[player] = nil
     end)
 
-    Characters[player] = plrCharacter
+    if player.Character then
+        setUpCharacter(player.Character)
+    end
+end
 
-end)
+Players.PlayerAdded:Connect(setUpPlayer)
+
+for _, player in pairs(Players:GetPlayers()) do
+    task.spawn(setUpPlayer, player)
+end
 
 Players.PlayerRemoving:Connect(function(player)
+    MovementSimulation.UnregisterPlayer(player)
+    Characters[player] = nil
+
     PlayerProfile.SaveProfile(player)
     PlayerProfile:ReleaseProfile(player)
-    Characters[player] = nil
-end)
-
-
-local pRemote = ReplicatedStorage.Remotes.ParkourRemote
-
-pRemote.OnServerEvent:Connect(function(player, traversalType)
-    local character = Characters[player]
-
-    if not character then return end
-
-    if traversalType == "Vaulting" then
-        
-    end
-end)
- 
---[[
-
-RunService.PostSimulation:Connect(function(deltaTime)
-    for _, character in pairs(Characters) do
-        character:UpdateMomentum(deltaTime)
-    end
 
 end)
-]]
