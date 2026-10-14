@@ -11,6 +11,7 @@ local AnimationController = require(StarterPlr.StarterPlayerScripts.Controllers.
 local UIController = require(script.Parent.Controllers.UIController)
 local InputController = require(script.Parent.Controllers.InputController)
 local HumanoidController = require(script.Parent.Controllers.HumanoidController)
+local MovementSimulation = require(RepStorage.Shared.Simulation.MovementSimulation)
 
 
 local player = Players.LocalPlayer

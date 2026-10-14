@@ -4,9 +4,13 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 
 local PlayerProfile = require(ServerScriptService.PlayerProfile.ProfileService)
-local CharacterClass = require(ReplicatedStorage.Shared.Character.CharacterClass)
+local CharacterClass = require(ReplicatedStorage.Shared.CharacterClass)
+local MovementSimulation = require(ReplicatedStorage.Shared.Simulation.MovementSimulation)
 
 local Characters = {}
+
+MovementSimulation.Init()
+
 
 Players.PlayerAdded:Connect(function(player)
     local profile = PlayerProfile.LoadProfile(player)
@@ -27,6 +31,7 @@ Players.PlayerAdded:Connect(function(player)
     end)
 
     Characters[player] = plrCharacter
+
 end)
 
 Players.PlayerRemoving:Connect(function(player)
