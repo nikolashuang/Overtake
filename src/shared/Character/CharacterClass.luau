@@ -20,8 +20,8 @@ function CharacterClass.new(player, system)
     local self = setmetatable({}, CharacterClass)
 
     self.Player = player
-    self.Profile = system.Profile
-    self.AnimationController = system.AnimationController
+    self.Profile = system and system.Profile
+    self.AnimationController = system and system.AnimationController
 
     self.Character = nil
     self.Humanoid = nil

@@ -12,10 +12,9 @@ MovementSimulation.Init()
 local function setupCharacter(character)
     MovementSimulation.UnregisterCharacter(player)
 
-    -- Wait for server-created movement Instances.
     character:WaitForChild("HumanoidRootPart")
     character:WaitForChild("Humanoid")
-    character:WaitForChild("MovementAttachment")
+    character:WaitForChild("HumanoidRootPart"):WaitForChild("MovementAttachment")
 
     local characterObject = CharacterClass.new(player, nil)
     characterObject:BindCharacter(character)
@@ -23,6 +22,7 @@ local function setupCharacter(character)
     MovementSimulation.RegisterCharacter(player, characterObject)
 end
 
+MovementSimulation.RegisterPlayer(player)
 player.CharacterAdded:Connect(setupCharacter)
 
 player.CharacterRemoving:Connect(function()

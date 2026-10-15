@@ -17,6 +17,8 @@ local function setUpPlayer(player)
         player:Kick("Failed to load your progress. Please rejoin")
     end
 
+    MovementSimulation.RegisterPlayer(player)
+
     local function setUpCharacter(character)
         MovementSimulation.UnregisterCharacter(player)
         MovementSimulation.PreparePlayer(player, character)
