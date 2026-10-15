@@ -55,12 +55,8 @@ function Simulation.RegisterCharacter(player, characterObject)
     Characters[player] = characterObject
 end
 
-function Simulation.UnregisterPlayer(player)
-    Characters[player] = nil
-end
-
 function Simulation.UnregisterCharacter(player)
-    return Characters[player]
+    Characters[player] = nil
 end
 
 

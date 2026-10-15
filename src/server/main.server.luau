@@ -18,7 +18,7 @@ local function setUpPlayer(player)
     end
 
     local function setUpCharacter(character)
-        MovementSimulation.UnregisterPlayer(player)
+        MovementSimulation.UnregisterCharacter(player)
         MovementSimulation.PreparePlayer(player, character)
 
         local characterObject = CharacterClass.new(player, profile)
@@ -47,7 +47,7 @@ for _, player in pairs(Players:GetPlayers()) do
 end
 
 Players.PlayerRemoving:Connect(function(player)
-    MovementSimulation.UnregisterPlayer(player)
+    MovementSimulation.UnregisterCharacter(player)
     Characters[player] = nil
 
     PlayerProfile.SaveProfile(player)
