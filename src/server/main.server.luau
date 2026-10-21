@@ -15,6 +15,7 @@ local function setUpPlayer(player)
 
     if not profile then
         player:Kick("Failed to load your progress. Please rejoin")
+        return
     end
 
     MovementSimulation.RegisterPlayer(player)

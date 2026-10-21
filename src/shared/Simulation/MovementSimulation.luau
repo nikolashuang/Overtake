@@ -22,7 +22,6 @@ function Simulation.PreparePlayer(player, character)
     if not RunService:IsServer() then return end
 
     local rootPart = character:WaitForChild("HumanoidRootPart")
-    local humanoid = character:WaitForChild("Humanoid")
 
     local movementAttachment = Instance.new("Attachment")
     movementAttachment.Name = "MovementAttachment"
@@ -69,6 +68,10 @@ end
 
 function Simulation.RegisterCharacter(player, characterObject)
     Characters[player] = characterObject
+end
+
+function Simulation.UnregisterPlayer(player)
+    PlayerInputs[player] = nil
 end
 
 function Simulation.UnregisterCharacter(player)
